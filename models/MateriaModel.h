@@ -24,6 +24,11 @@ public:
     QHash<int, QByteArray> roleNames() const override {
         return { {IdRole, "id"}, {NombreRole, "nombre"} };
     }
+    Q_INVOKABLE QVariantMap get(int row) const {
+        if (row < 0 || row >= m_data.count()) return {};
+        const auto &item = m_data[row];
+        return { {"id", item.id}, {"nombre", item.nombre} };
+    }
 
     void setMaterias(const QList<MateriaDTO> &data) {
         beginResetModel();

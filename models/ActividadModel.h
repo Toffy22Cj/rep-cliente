@@ -9,6 +9,8 @@ namespace Rep {
 class ActividadModel : public QAbstractListModel
 {
     Q_OBJECT
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+
 public:
     enum Roles {
         IdRole = Qt::UserRole + 1,
@@ -17,7 +19,9 @@ public:
         DescripcionRole,
         FechaEntregaRole,
         MateriaNombreRole,
-        CursoNombreRole
+        CursoNombreRole,
+        MateriaRole,
+        DuracionRole
     };
 
     explicit ActividadModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
@@ -34,6 +38,8 @@ public:
             case FechaEntregaRole: return item.fechaEntrega.toString(Qt::ISODate);
             case MateriaNombreRole: return item.materiaNombre;
             case CursoNombreRole: return item.cursoNombre;
+            case MateriaRole: return item.materiaNombre; // Alias for QML
+            case DuracionRole: return item.duracionMinutos;
             default: return {};
         }
     }
@@ -45,16 +51,23 @@ public:
             {DescripcionRole, "descripcion"},
             {FechaEntregaRole, "fechaEntrega"},
             {MateriaNombreRole, "materiaNombre"},
-            {CursoNombreRole, "cursoNombre"}
+            {CursoNombreRole, "cursoNombre"},
+            {MateriaRole, "materia"},
+            {DuracionRole, "duracion"}
         };
     }
 
     void setActividades(const QList<ActividadDTO> &data) {
+        if (m_data.size() == data.size() && data.isEmpty()) return; // check redundancy slightly
         beginResetModel();
         m_data = data;
         endResetModel();
+        emit countChanged();
     }
     void setData(const QList<ActividadDTO> &data) { setActividades(data); }
+
+signals:
+    void countChanged();
 
 private:
     QList<ActividadDTO> m_data;

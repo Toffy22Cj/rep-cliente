@@ -15,12 +15,8 @@ ProfesorViewModel::ProfesorViewModel(QObject *parent)
         m_actividadesActivas = data.actividadesActivas;
         m_entregasPendientes = data.entregasPendientes;
         
-        // Update models if dashboard includes them
-        QList<MateriaDTO> materias;
-        for (const auto &m : data.materias) {
-            materias.append({m.id, m.nombre});
-        }
-        m_materiaModel->setMaterias(materias);
+        // Dashboard data does not include full materias list anymore
+
 
         m_isLoading = false;
         emit isLoadingChanged();
@@ -34,11 +30,13 @@ ProfesorViewModel::ProfesorViewModel(QObject *parent)
     });
 
     connect(m_service, &ProfesorService::materiasAsignadasFetched, this, [this](const QList<MateriaAsignadaDTO> &materias) {
+        qDebug() << "ViewModel received materias size:" << materias.size();
         QList<MateriaDTO> list;
         for (const auto &m : materias) {
             list.append({m.id, m.nombre});
         }
         m_materiaModel->setMaterias(list);
+        qDebug() << "MateriaModel updated. New COUNT:" << m_materiaModel->rowCount();
         m_isLoading = false;
         emit isLoadingChanged();
     });
@@ -56,6 +54,7 @@ ProfesorViewModel::ProfesorViewModel(QObject *parent)
     });
 
     connect(m_service, &ProfesorService::estudiantesFetched, this, [this](const QList<EstudianteSimplificadoDTO> &estudiantes) {
+        qDebug() << "ViewModel received estudiantes size:" << estudiantes.size();
         QVariantList list;
         for (const auto &e : estudiantes) {
             QVariantMap map;

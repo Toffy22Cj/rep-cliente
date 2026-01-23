@@ -1,4 +1,5 @@
 #include "AuthService.h"
+#include "ApiConfig.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkRequest>
@@ -12,7 +13,7 @@ AuthService::AuthService(QObject *parent)
 
 void AuthService::login(const QString &identificacion, const QString &password)
 {
-    QUrl url("http://localhost:8080/api/auth/login"); // Adjusted to common local port
+    QUrl url(ApiConfig::baseUrl() + "/auth/login");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 

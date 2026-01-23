@@ -11,6 +11,7 @@ struct CursoDTO {
     long long id;
     QString nombre;
     int grado;
+    QString grupo;
 };
 
 struct MateriaAsignadaDTO {

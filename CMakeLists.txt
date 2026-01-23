@@ -9,6 +9,7 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Network)
 qt_standard_project_setup(REQUIRES 6.8)
 
 set(HEADERS
+    api/ApiConfig.h
     api/AuthService.h
     api/EstudianteService.h
     api/ProfesorService.h
@@ -55,6 +56,10 @@ set(QML_FILES
     qml/pages/AttendancePage.qml
     qml/pages/QuestionEditorPage.qml
     qml/pages/GradingPage.qml
+    qml/components/StatCard.qml
+    qml/pages/CoursesPage.qml
+    qml/pages/ReportsPage.qml
+    qml/components/DatePicker.qml
 )
 
 qt_add_qml_module(appRep

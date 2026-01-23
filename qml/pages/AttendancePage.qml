@@ -142,9 +142,31 @@ Page {
         target: profesorViewModel
         function onAsistenciaFetched(asistencia) {
             localAttendanceModel.clear()
-            for (let i = 0; i < asistencia.length; i++) {
-                localAttendanceModel.append(asistencia[i])
+            if (asistencia.length === 0) {
+                // No attendance record found, load students to create new one
+                if (cursoCombo.currentIndex >= 0) {
+                   profesorViewModel.loadEstudiantes(profesorViewModel.cursoModel.get(cursoCombo.currentIndex).id)
+                }
+            } else {
+                for (let i = 0; i < asistencia.length; i++) {
+                    localAttendanceModel.append(asistencia[i])
+                }
             }
+        }
+        function onEstudiantesFetched(estudiantes) {
+           // Called when we need to populate for new attendance
+           // Check if we are in this page context or add a flag if shared viewmodel
+           // For simplicity, we just append if the model is empty (which we cleared above)
+           if (localAttendanceModel.count === 0) {
+               for (let i = 0; i < estudiantes.length; i++) {
+                   localAttendanceModel.append({
+                       estudianteId: estudiantes[i].id,
+                       nombreEstudiante: estudiantes[i].nombre,
+                       asistio: false, // Default to false or true as desired
+                       observaciones: ""
+                   })
+               }
+           }
         }
         function onAsistenciaSaved(success) {
             if (success) {

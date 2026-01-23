@@ -126,6 +126,42 @@ Page {
         }
     }
 
+    Dialog {
+        id: editDialog
+        title: "Editar Actividad"
+        anchors.centerIn: parent
+        modal: true
+        width: Math.min(parent.width * 0.9, 400)
+        standardButtons: Dialog.Save | Dialog.Cancel
+        
+        property var currentId: 0
+
+        function openWith(item) {
+            currentId = item.id
+            editTituloField.text = item.titulo
+            var idx = editTipoCombo.model.indexOf(item.tipo)
+            if (idx >= 0) editTipoCombo.currentIndex = idx
+            editDescField.text = item.descripcion || ""
+            editFechaField.text = item.fechaEntrega
+            editDurField.text = item.duracion || ""
+            open()
+        }
+
+        onAccepted: {
+            console.log("Update not implemented in ViewModel yet")
+        }
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 10
+            TextField { id: editTituloField; placeholderText: "Título"; Layout.fillWidth: true }
+            ComboBox { id: editTipoCombo; model: ["EXAMEN", "QUIZ", "TALLER", "TAREA"]; Layout.fillWidth: true }
+            TextArea { id: editDescField; placeholderText: "Descripción"; Layout.fillWidth: true; Layout.preferredHeight: 80 }
+            TextField { id: editFechaField; placeholderText: "Fecha Entrega (YYYY-MM-DD)"; Layout.fillWidth: true }
+            TextField { id: editDurField; placeholderText: "Duración (minutos)"; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
+        }
+    }
+
     Component.onCompleted: {
         profesorViewModel.loadMaterias()
         if (createNew) createDialog.open()
