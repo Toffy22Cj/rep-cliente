@@ -35,6 +35,42 @@ struct RespuestaEstudianteSimplificadaDTO {
     bool calificada;
 };
 
+struct EstudianteSimplificadoDTO {
+    long long id;
+    QString nombre;
+    QString identificacion;
+    QString correo;
+};
+
+struct AsistenciaDTO {
+    long long estudianteId;
+    QString nombreEstudiante;
+    bool asistio;
+    QString observaciones;
+};
+
+struct ActividadCreateDTO {
+    QString titulo;
+    QString tipo; // e.g., "EXAMEN", "QUIZ", "TALLER"
+    QString descripcion;
+    QDate fechaEntrega;
+    int duracionMinutos;
+    long long materiaId;
+    long long cursoId;
+};
+
+struct OpcionRequestDTO {
+    QString texto;
+    bool esCorrecta;
+};
+
+struct PreguntaRequestDTO {
+    long long actividadId;
+    QString enunciado;
+    QString tipo;
+    QList<OpcionRequestDTO> opciones;
+};
+
 } // namespace Rep
 
 #endif // PROFESORDTOS_H

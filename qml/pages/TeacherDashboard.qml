@@ -9,11 +9,16 @@ Page {
         background: Rectangle { color: "#2c3e50" }
         RowLayout {
             anchors.fill: parent
+            ToolButton {
+                text: "\u2630"
+                font.pixelSize: 20
+                onClicked: navDrawer.open()
+            }
             Label {
-                text: "Dashboard Profesor"
+                text: "Panel del Profesor"
                 color: "white"
                 font.bold: true
-                Layout.leftMargin: 10
+                font.pixelSize: 18
             }
             Item { Layout.fillWidth: true }
             Label {
@@ -21,108 +26,217 @@ Page {
                 color: "white"
                 Layout.rightMargin: 10
             }
-            ToolButton {
-                text: "Log Out"
+        }
+    }
+
+    Drawer {
+        id: navDrawer
+        width: 250
+        height: root.height
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 10
+
+            Label {
+                text: "Navegación"
+                font.bold: true
+                font.pixelSize: 16
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 20
+                Layout.bottomMargin: 10
+            }
+
+            Button {
+                text: "Dashboard"
+                Layout.fillWidth: true
+                flat: true
+                onClicked: { navDrawer.close(); }
+            }
+
+            Button {
+                text: "Gestión de Actividades"
+                Layout.fillWidth: true
+                flat: true
+                onClicked: { 
+                    navDrawer.close();
+                    stackView.push("ActivityManagementPage.qml")
+                }
+            }
+
+            Button {
+                text: "Control de Asistencia"
+                Layout.fillWidth: true
+                flat: true
+                onClicked: { 
+                    navDrawer.close();
+                    stackView.push("AttendancePage.qml")
+                }
+            }
+
+            Item { Layout.fillHeight: true }
+
+            Button {
+                text: "Cerrar Sesión"
+                Layout.fillWidth: true
+                palette.buttonText: "red"
                 onClicked: sessionManager.clear()
             }
         }
     }
 
-    ColumnLayout {
+    ScrollView {
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 20
+        clip: true
 
-        // Statistics Cards
-        RowLayout {
-            spacing: 20
-            Layout.fillWidth: true
+        ColumnLayout {
+            width: parent.width
+            anchors.margins: 20
+            spacing: 25
 
-            Rectangle {
+            Label {
+                text: "¡Hola, " + sessionManager.userName + "!"
+                font.pixelSize: 24
+                font.bold: true
+                color: "#2c3e50"
+            }
+
+            // Statistics Cards Grid
+            GridLayout {
+                columns: root.width > 600 ? 3 : 1
+                rowSpacing: 15
+                columnSpacing: 15
                 Layout.fillWidth: true
-                height: 100
-                color: "#3498db"
-                radius: 10
-                Column {
-                    anchors.centerIn: parent
-                    Label { text: "Estudiantes"; color: "white"; font.bold: true }
-                    Label { text: profesorViewModel.totalEstudiantes; color: "white"; font.pixelSize: 24 }
+
+                StatCard {
+                    title: "Estudiantes"
+                    value: profesorViewModel.totalEstudiantes
+                    cardColor: "#3498db"
+                    icon: "\uD83D\uDC65"
+                }
+
+                StatCard {
+                    title: "Actividades Activas"
+                    value: profesorViewModel.actividadesActivas
+                    cardColor: "#2ecc71"
+                    icon: "\uD83D\uDCDD"
+                }
+
+                StatCard {
+                    title: "Pendientes de Calificar"
+                    value: profesorViewModel.entregasPendientes
+                    cardColor: "#e67e22"
+                    icon: "\u23F3"
                 }
             }
 
-            Rectangle {
+            Label {
+                text: "Resumen de Actividades Recientes"
+                font.pixelSize: 18
+                font.bold: true
+                Layout.topMargin: 10
+            }
+
+            ListView {
+                id: recentActivitiesList
                 Layout.fillWidth: true
-                height: 100
-                color: "#2ecc71"
-                radius: 10
-                Column {
-                    anchors.centerIn: parent
-                    Label { text: "Actividades Activas"; color: "white"; font.bold: true }
-                    Label { text: profesorViewModel.actividadesActivas; color: "white"; font.pixelSize: 24 }
+                Layout.preferredHeight: contentHeight
+                model: profesorViewModel.actividadModel
+                spacing: 10
+                interactive: false
+
+                delegate: ActivityDelegate {
+                    width: recentActivitiesList.width
+                    onViewResults: stackView.push("GradingPage.qml", { actividadId: model.id })
+                    onEdit: stackView.push("QuestionEditorPage.qml", { actividadId: model.id })
                 }
             }
 
-            Rectangle {
+            Button {
+                text: "+ Nueva Actividad"
                 Layout.fillWidth: true
-                height: 100
-                color: "#e67e22"
-                radius: 10
-                Column {
-                    anchors.centerIn: parent
-                    Label { text: "Tareas por Calificar"; color: "white"; font.bold: true }
-                    Label { text: profesorViewModel.entregasPendientes; color: "white"; font.pixelSize: 24 }
-                }
+                Layout.preferredHeight: 50
+                highlighted: true
+                onClicked: stackView.push("ActivityManagementPage.qml", { createNew: true })
             }
-        }
-
-        Label {
-            text: "Mis Actividades"
-            font.pixelSize: 20
-            font.bold: true
-        }
-
-        ListView {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            model: profesorViewModel.actividadModel
-            spacing: 10
-            clip: true
-
-            delegate: ItemDelegate {
-                width: parent.width
-                height: 80
-                background: Rectangle {
-                    color: "white"
-                    border.color: "#bdc3c7"
-                    radius: 5
-                }
-
-                contentItem: RowLayout {
-                    spacing: 20
-                    Column {
-                        Layout.fillWidth: true
-                        Label { text: model.titulo; font.bold: true; font.pixelSize: 16 }
-                        Label { text: "Tipo: " + model.tipo; color: "#7f8c8d" }
-                    }
-                    Button {
-                        text: "Ver Resultados"
-                        onClicked: console.log("Ver resultados de " + model.id)
-                    }
-                    Button {
-                        text: "Editar"
-                        onClicked: console.log("Editar actividad " + model.id)
-                    }
-                }
-            }
-        }
-
-        Button {
-            text: "+ Crear Nueva Actividad"
-            Layout.fillWidth: true
-            Layout.preferredHeight: 50
-            onClicked: console.log("Crear actividad")
         }
     }
+
+    component StatCard : Rectangle {
+        property string title: ""
+        property var value: 0
+        property string cardColor: "blue"
+        property string icon: ""
+
+        Layout.fillWidth: true
+        height: 120
+        color: "white"
+        radius: 12
+        border.color: "#ecf0f1"
+        border.width: 1
+
+        Rectangle {
+            width: 5
+            height: parent.height - 20
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+            color: parent.cardColor
+            radius: 2
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: 15
+            spacing: 15
+            
+            Column {
+                Layout.fillWidth: true
+                Label { text: title; color: "#7f8c8d"; font.bold: true }
+                Label { text: value; color: "#2c3e50"; font.pixelSize: 32; font.bold: true }
+            }
+
+            Label {
+                text: icon
+                font.pixelSize: 40
+                opacity: 0.2
+            }
+        }
+    }
+
+    component ActivityDelegate : ItemDelegate {
+        signal viewResults()
+        signal edit()
+
+        width: parent.width
+        height: 80
+        background: Rectangle {
+            color: "white"
+            border.color: "#ecf0f1"
+            radius: 8
+        }
+
+        contentItem: RowLayout {
+            spacing: 15
+            Column {
+                Layout.fillWidth: true
+                Label { text: model.titulo; font.bold: true; font.pixelSize: 16 }
+                Label { text: "Entrega: " + model.fechaEntrega; color: "#95a5a6"; font.pixelSize: 12 }
+            }
+            Button {
+                text: "Calificar"
+                flat: true
+                onClicked: viewResults()
+            }
+            Button {
+                text: "Editar"
+                highlighted: true
+                onClicked: edit()
+            }
+        }
+    }
+
 
     Component.onCompleted: {
         profesorViewModel.loadDashboard();

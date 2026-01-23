@@ -4,8 +4,8 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include "ProfesorDTOs.h"
-#include "StudentDTOs.h"
+#include "../models/ProfesorDTOs.h"
+#include "../models/StudentDTOs.h"
 
 namespace Rep {
 
@@ -21,6 +21,12 @@ public:
     void fetchActividades(long long materiaId, long long cursoId, const QString &token);
     void fetchRespuestas(long long actividadId, const QString &token);
     void calificarRespuesta(long long respuestaId, float nota, const QString &token);
+    void fetchEstudiantes(long long cursoId, const QString &token);
+    void fetchAsistencia(long long cursoId, long long materiaId, const QDate &fecha, const QString &token);
+    void saveAsistencia(long long cursoId, long long materiaId, const QDate &fecha, const QList<AsistenciaDTO> &asistencia, const QString &token);
+    void crearActividad(const ActividadCreateDTO &actividad, const QString &token);
+    void actualizarActividad(long long id, const ActividadCreateDTO &actividad, const QString &token);
+    void crearPregunta(const PreguntaRequestDTO &pregunta, const QString &token);
 
 signals:
     void dashboardDataFetched(const ProfesorDashboardDTO &data);
@@ -29,6 +35,12 @@ signals:
     void actividadesFetched(const QList<ActividadDTO> &actividades);
     void respuestasFetched(const QList<RespuestaEstudianteSimplificadaDTO> &respuestas);
     void respuestaCalificada(long long respuestaId, float nota);
+    void estudiantesFetched(const QList<EstudianteSimplificadoDTO> &estudiantes);
+    void asistenciaFetched(const QList<AsistenciaDTO> &asistencia);
+    void asistenciaSaved(bool success);
+    void actividadCreada(long long id);
+    void actividadActualizada(bool success);
+    void preguntaCreada(long long id);
     void errorOccurred(const QString &error);
 
 private:

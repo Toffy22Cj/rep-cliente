@@ -160,4 +160,162 @@ void ProfesorService::calificarRespuesta(long long respuestaId, float nota, cons
     });
 }
 
+void ProfesorService::fetchEstudiantes(long long cursoId, const QString &token)
+{
+    QUrl url(QString("http://localhost:8080/api/profesor/estudiantes/curso/%1").arg(cursoId));
+    QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+
+        QList<EstudianteSimplificadoDTO> estudiantes;
+        QJsonArray array = QJsonDocument::fromJson(reply->readAll()).array();
+        for (const auto &v : array) {
+            QJsonObject obj = v.toObject();
+            estudiantes.append({
+                obj["id"].toVariant().toLongLong(),
+                obj["nombre"].toString(),
+                obj["identificacion"].toString(),
+                obj["correo"].toString()
+            });
+        }
+        emit estudiantesFetched(estudiantes);
+    });
+}
+
+void ProfesorService::fetchAsistencia(long long cursoId, long long materiaId, const QDate &fecha, const QString &token)
+{
+    QUrl url(QString("http://localhost:8080/api/profesor/asistencia?cursoId=%1\u0026materiaId=%2\u0026fecha=%3")
+        .arg(cursoId).arg(materiaId).arg(fecha.toString(Qt::ISODate)));
+    QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+
+        QList<AsistenciaDTO> asistencias;
+        QJsonArray array = QJsonDocument::fromJson(reply->readAll()).array();
+        for (const auto &v : array) {
+            QJsonObject obj = v.toObject();
+            QJsonObject est = obj["estudiante"].toObject();
+            asistencias.append({
+                est["id"].toVariant().toLongLong(),
+                est["nombre"].toString(),
+                obj["asistio"].toBool(),
+                obj["observaciones"].toString()
+            });
+        }
+        emit asistenciaFetched(asistencias);
+    });
+}
+
+void ProfesorService::saveAsistencia(long long cursoId, long long materiaId, const QDate &fecha, const QList<AsistenciaDTO> &asistencia, const QString &token)
+{
+    QUrl url(QString("http://localhost:8080/api/profesor/asistencia?cursoId=%1\u0026materiaId=%2\u0026fecha=%3")
+        .arg(cursoId).arg(materiaId).arg(fecha.toString(Qt::ISODate)));
+    
+    QJsonArray array;
+    for (const auto &a : asistencia) {
+        QJsonObject obj;
+        obj["estudianteId"] = a.estudianteId;
+        obj["asistio"] = a.asistio;
+        obj["observaciones"] = a.observaciones;
+        array.append(obj);
+    }
+
+    QNetworkReply *reply = m_networkManager->post(createRequest(url, token), QJsonDocument(array).toJson());
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            emit asistenciaSaved(false);
+            return;
+        }
+        emit asistenciaSaved(true);
+    });
+}
+
+void ProfesorService::crearActividad(const ActividadCreateDTO &actividat, const QString &token)
+{
+    QUrl url("http://localhost:8080/api/actividades");
+    QJsonObject obj;
+    obj["titulo"] = actividat.titulo;
+    obj["tipo"] = actividat.tipo;
+    obj["descripcion"] = actividat.descripcion;
+    obj["fechaEntrega"] = actividat.fechaEntrega.toString(Qt::ISODate);
+    obj["duracionMinutos"] = actividat.duracionMinutos;
+    obj["materiaId"] = actividat.materiaId;
+    obj["cursoId"] = actividat.cursoId;
+
+    QNetworkReply *reply = m_networkManager->post(createRequest(url, token), QJsonDocument(obj).toJson());
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+        QJsonObject res = QJsonDocument::fromJson(reply->readAll()).object();
+        emit actividadCreada(res["id"].toVariant().toLongLong());
+    });
+}
+
+void ProfesorService::actualizarActividad(long long id, const ActividadCreateDTO &actividat, const QString &token)
+{
+    QUrl url(QString("http://localhost:8080/api/actividades/%1").arg(id));
+    QJsonObject obj;
+    obj["titulo"] = actividat.titulo;
+    obj["tipo"] = actividat.tipo;
+    obj["descripcion"] = actividat.descripcion;
+    obj["fechaEntrega"] = actividat.fechaEntrega.toString(Qt::ISODate);
+    obj["duracionMinutos"] = actividat.duracionMinutos;
+    obj["materiaId"] = actividat.materiaId;
+    obj["cursoId"] = actividat.cursoId;
+
+    QNetworkReply *reply = m_networkManager->put(createRequest(url, token), QJsonDocument(obj).toJson());
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            emit actividadActualizada(false);
+            return;
+        }
+        emit actividadActualizada(true);
+    });
+}
+
+void ProfesorService::crearPregunta(const PreguntaRequestDTO &pregunta, const QString &token)
+{
+    QUrl url("http://localhost:8080/api/preguntas");
+    QJsonObject root;
+    root["actividadId"] = pregunta.actividadId;
+    root["enunciado"] = pregunta.enunciado;
+    root["tipo"] = pregunta.tipo;
+
+    QJsonArray ops;
+    for (const auto &o : pregunta.opciones) {
+        QJsonObject oObj;
+        oObj["texto"] = o.texto;
+        oObj["esCorrecta"] = o.esCorrecta;
+        ops.append(oObj);
+    }
+    root["opciones"] = ops;
+
+    QNetworkReply *reply = m_networkManager->post(createRequest(url, token), QJsonDocument(root).toJson());
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+        QJsonObject res = QJsonDocument::fromJson(reply->readAll()).object();
+        emit preguntaCreada(res["id"].toVariant().toLongLong());
+    });
+}
+
 } // namespace Rep
+
