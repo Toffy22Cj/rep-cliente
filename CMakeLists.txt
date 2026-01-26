@@ -28,6 +28,11 @@ set(HEADERS
     viewmodels/LoginViewModel.h
     viewmodels/EstudianteViewModel.h
     viewmodels/ProfesorViewModel.h
+
+    viewmodels/ProfesorViewModel.h
+    viewmodels/ReportsViewModel.h
+    viewmodels/AdminViewModel.h
+    api/AdminService.h
 )
 
 set(SOURCES
@@ -39,6 +44,11 @@ set(SOURCES
     viewmodels/LoginViewModel.cpp
     viewmodels/EstudianteViewModel.cpp
     viewmodels/ProfesorViewModel.cpp
+
+    viewmodels/ProfesorViewModel.cpp
+    viewmodels/ReportsViewModel.cpp
+    viewmodels/AdminViewModel.cpp
+    api/AdminService.cpp
 )
 
 qt_add_executable(appRep
@@ -58,7 +68,12 @@ set(QML_FILES
     qml/pages/GradingPage.qml
     qml/components/StatCard.qml
     qml/pages/CoursesPage.qml
+    qml/pages/StudentsPage.qml
     qml/pages/ReportsPage.qml
+    qml/pages/AdminDashboard.qml
+    qml/pages/UserManagementPage.qml
+    qml/pages/CourseManagementPage.qml
+    qml/pages/SubjectManagementPage.qml
     qml/components/DatePicker.qml
 )
 

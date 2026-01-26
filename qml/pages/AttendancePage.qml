@@ -43,6 +43,10 @@ Page {
                 model: profesorViewModel.cursoModel
                 textRole: "nombre"
                 onActivated: updateData()
+                onCountChanged: {
+                    if (count > 0 && currentIndex === -1) currentIndex = 0
+                    console.log("CursoCombo count:", count)
+                }
             }
 
             Label { text: "Materia:"; font.bold: true }
@@ -52,6 +56,14 @@ Page {
                 model: profesorViewModel.materiaModel
                 textRole: "nombre"
                 onActivated: updateData()
+                onCountChanged: {
+                    if (count > 0 && currentIndex === -1) currentIndex = 0
+                    console.log("MateriaCombo count:", count)
+                    // Auto-load when both combos are ready
+                    if (count > 0 && cursoCombo.count > 0 && currentIndex >= 0 && cursoCombo.currentIndex >= 0) {
+                        updateData()
+                    }
+                }
             }
 
             Label { text: "Fecha:"; font.bold: true }
@@ -80,60 +92,157 @@ Page {
 
             delegate: ItemDelegate {
                 width: studentList.width
-                height: 50
+                height: 120
                 background: Rectangle {
                     color: index % 2 === 0 ? "#f9f9f9" : "white"
                     radius: 4
+                    border.color: "#dfe6e9"
+                    border.width: 1
                 }
 
-                contentItem: RowLayout {
-                    spacing: 15
+                contentItem: GridLayout {
+                    columns: 2
+                    rows: 3
+                    columnSpacing: 10
+                    rowSpacing: 5
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    
+                    // Nombre del estudiante (span 2 columns)
                     Label {
                         text: model.nombreEstudiante
                         Layout.fillWidth: true
-                        font.pixelSize: 16
+                        Layout.columnSpan: 2
+                        font.bold: true
+                        font.pixelSize: 15
+                        color: "#2c3e50"
                     }
-                    CheckBox {
-                        checked: model.asistio
-                        onToggled: model.asistio = checked
+                    
+                    // Estado
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 5
+                        Label { 
+                            text: "Estado:" 
+                            width: 55
+                            font.pixelSize: 13
+                        }
+                        ComboBox {
+                            id: estadoCombo
+                            Layout.fillWidth: true
+                            model: ["PRESENTE", "NO_INGRESO", "EXCUSA"]
+                            currentIndex: {
+                                var idx = estadoCombo.model.indexOf(model.estado)
+                                return idx >= 0 ? idx : 1
+                            }
+                            onActivated: (index) => {
+                                localAttendanceModel.setProperty(model.index, "estado", currentText)
+                            }
+                        }
+                    }
+                    
+                    // Tipo de Excusa (solo visible si estado == EXCUSA)
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: model.estado === "EXCUSA"
+                        spacing: 5
+                        Label { 
+                            text: "Excusa:" 
+                            width: 55
+                            font.pixelSize: 13
+                        }
+                        ComboBox {
+                            id: excusaCombo
+                            Layout.fillWidth: true
+                            model: ["MEDICA", "PERSONAL", "FAMILIAR", "OTRA"]
+                            currentIndex: {
+                                var idx = excusaCombo.model.indexOf(model.tipoExcusa)
+                                return idx >= 0 ? idx : 0
+                            }
+                            onActivated: (index) => {
+                                localAttendanceModel.setProperty(model.index, "tipoExcusa", currentText)
+                            }
+                        }
+                    }
+                    
+                    // Observación (span 2 columns)
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.columnSpan: 2
+                        spacing: 5
+                        Label { 
+                            text: "Obs:" 
+                            width: 40
+                            font.pixelSize: 13
+                        }
+                        TextField {
+                            Layout.fillWidth: true
+                            text: model.observacion || ""
+                            placeholderText: "Observaciones..."
+                            font.pixelSize: 12
+                            onEditingFinished: {
+                                localAttendanceModel.setProperty(model.index, "observacion", text)
+                            }
+                        }
                     }
                 }
             }
         }
 
-        Button {
-            text: "Guardar Asistencia"
+        RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 50
-            highlighted: true
-            enabled: localAttendanceModel.count > 0
-            onClicked: {
-                let data = []
-                for (let i = 0; i < localAttendanceModel.count; i++) {
-                    let item = localAttendanceModel.get(i)
-                    data.push({
-                        estudianteId: item.estudianteId,
-                        nombreEstudiante: item.nombreEstudiante,
-                        asistio: item.asistio,
-                        observaciones: ""
-                    })
+            spacing: 10
+            
+            Button {
+                text: "🔄 Refrescar"
+                Layout.preferredHeight: 40
+                onClicked: updateData()
+            }
+            
+            Button {
+                text: "Guardar Asistencia"
+                Layout.fillWidth: true
+                Layout.preferredHeight: 50
+                highlighted: true
+                enabled: localAttendanceModel.count > 0
+                onClicked: {
+                    let data = []
+                    for (let i = 0; i < localAttendanceModel.count; i++) {
+                        let item = localAttendanceModel.get(i)
+                        data.push({
+                            estudianteId: item.estudianteId,
+                            estado: item.estado,
+                            tipoExcusa: item.tipoExcusa || "",
+                            observacion: item.observacion || ""
+                        })
+                    }
+                    profesorViewModel.saveAsistencia(
+                        profesorViewModel.cursoModel.get(cursoCombo.currentIndex).id,
+                        profesorViewModel.materiaModel.get(materiaCombo.currentIndex).id,
+                        fechaField.text,
+                        data
+                    )
                 }
-                profesorViewModel.saveAsistencia(
-                    profesorViewModel.cursoModel.get(cursoCombo.currentIndex).id,
-                    profesorViewModel.materiaModel.get(materiaCombo.currentIndex).id,
-                    fechaField.text,
-                    data
-                )
             }
         }
     }
 
     function updateData() {
-        if (cursoCombo.currentIndex < 0 || materiaCombo.currentIndex < 0) return;
+        if (cursoCombo.currentIndex < 0 || materiaCombo.currentIndex < 0) {
+            console.log("AttendancePage: Combos not ready:", cursoCombo.currentIndex, materiaCombo.currentIndex)
+            return;
+        }
+        
         localAttendanceModel.clear()
+        
+        var cursoObj = profesorViewModel.cursoModel.get(cursoCombo.currentIndex)
+        var materiaObj = profesorViewModel.materiaModel.get(materiaCombo.currentIndex)
+        
+        console.log("AttendancePage: Loading asistencia for curso:", cursoObj.id, "materia:", materiaObj.id, "fecha:", fechaField.text)
+        
         profesorViewModel.loadAsistencia(
-            profesorViewModel.cursoModel.get(cursoCombo.currentIndex).id,
-            profesorViewModel.materiaModel.get(materiaCombo.currentIndex).id,
+            cursoObj.id,
+            materiaObj.id,
             fechaField.text
         )
     }
@@ -162,8 +271,9 @@ Page {
                    localAttendanceModel.append({
                        estudianteId: estudiantes[i].id,
                        nombreEstudiante: estudiantes[i].nombre,
-                       asistio: false, // Default to false or true as desired
-                       observaciones: ""
+                       estado: "NO_INGRESO",
+                       tipoExcusa: "",
+                       observacion: ""
                    })
                }
            }

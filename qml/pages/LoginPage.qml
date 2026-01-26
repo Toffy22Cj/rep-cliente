@@ -101,11 +101,7 @@ Page {
     Connections {
         target: loginViewModel
         function onLoginSuccess(role) {
-            if (role === "PROFESOR") {
-                stackView.replace("TeacherDashboard.qml")
-            } else {
-                stackView.replace("StudentDashboard.qml")
-            }
+            root.loginSuccess()
         }
     }
 }

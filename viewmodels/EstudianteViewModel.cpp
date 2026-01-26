@@ -62,6 +62,12 @@ void EstudianteViewModel::loadMaterias()
     auto &session = SessionManager::instance();
     if (!session.isAuthenticated()) return;
 
+    QString role = session.userRole();
+    if (role == "ADMIN" || role == "PROFESOR") {
+        emit errorOccurred("Modo vista previa: Los administradores y profesores no tienen materias de estudiante.");
+        return;
+    }
+
     m_isLoading = true;
     emit isLoadingChanged();
     m_service->fetchMaterias(session.userId(), session.token());
@@ -72,6 +78,11 @@ void EstudianteViewModel::loadActividades()
     if (m_isLoading) return;
     auto &session = SessionManager::instance();
     if (!session.isAuthenticated()) return;
+
+    QString role = session.userRole();
+    if (role == "ADMIN" || role == "PROFESOR") {
+        return;
+    }
 
     m_isLoading = true;
     emit isLoadingChanged();

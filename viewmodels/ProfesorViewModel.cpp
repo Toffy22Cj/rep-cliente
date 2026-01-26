@@ -75,8 +75,9 @@ ProfesorViewModel::ProfesorViewModel(QObject *parent)
             QVariantMap map;
             map["estudianteId"] = a.estudianteId;
             map["nombreEstudiante"] = a.nombreEstudiante;
-            map["asistio"] = a.asistio;
-            map["observaciones"] = a.observaciones;
+            map["estado"] = a.estado;
+            map["tipoExcusa"] = a.tipoExcusa;
+            map["observacion"] = a.observacion;
             list.append(map);
         }
         m_isLoading = false;
@@ -160,8 +161,9 @@ void ProfesorViewModel::saveAsistencia(long long cursoId, long long materiaId, c
         list.append({
             map["estudianteId"].toLongLong(),
             map["nombreEstudiante"].toString(),
-            map["asistio"].toBool(),
-            map["observaciones"].toString()
+            map["estado"].toString(),
+            map["tipoExcusa"].toString(),
+            map["observacion"].toString()
         });
     }
 

@@ -24,6 +24,12 @@ public:
     void fetchEstudiantes(long long cursoId, const QString &token);
     void fetchAsistencia(long long cursoId, long long materiaId, const QDate &fecha, const QString &token);
     void saveAsistencia(long long cursoId, long long materiaId, const QDate &fecha, const QList<AsistenciaDTO> &asistencia, const QString &token);
+    
+    // Reportes
+    void fetchPromedios(long long cursoId, long long materiaId, const QString &token);
+    void fetchEntregas(long long actividadId, const QString &token);
+    void fetchEstadisticasActividad(long long actividadId, const QString &token);
+    void exportPromedios(long long cursoId, long long materiaId, const QString &token);
     void crearActividad(const ActividadCreateDTO &actividad, const QString &token);
     void actualizarActividad(long long id, const ActividadCreateDTO &actividad, const QString &token);
     void crearPregunta(const PreguntaRequestDTO &pregunta, const QString &token);
@@ -38,9 +44,16 @@ signals:
     void estudiantesFetched(const QList<EstudianteSimplificadoDTO> &estudiantes);
     void asistenciaFetched(const QList<AsistenciaDTO> &asistencia);
     void asistenciaSaved(bool success);
+
+    // Signals Reportes
+    void promediosFetched(const QList<ReportePromedioDTO> &promedios);
+    void entregasFetched(const QList<ReporteEntregaDTO> &entregas);
+    void estadisticasfetched(const EstadisticaActividadDTO &estadisticas);
+    void promediosExported(const QByteArray &pdfData, const QString &filename);
     void actividadCreada(long long id);
     void actividadActualizada(bool success);
     void preguntaCreada(long long id);
+
     void errorOccurred(const QString &error);
 
 private:

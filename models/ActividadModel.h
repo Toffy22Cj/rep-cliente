@@ -66,6 +66,21 @@ public:
     }
     void setData(const QList<ActividadDTO> &data) { setActividades(data); }
 
+    Q_INVOKABLE QVariantMap get(int row) const {
+        if (row < 0 || row >= m_data.size()) return {};
+        const auto &item = m_data.at(row);
+        return {
+            {"id", item.id},
+            {"titulo", item.titulo},
+            {"tipo", item.tipo},
+            {"descripcion", item.descripcion},
+            {"fechaEntrega", item.fechaEntrega.toString(Qt::ISODate)},
+            {"duracion", item.duracionMinutos},
+            {"materiaId", item.materiaId},
+            {"cursoId", item.cursoId}
+        };
+    }
+
 signals:
     void countChanged();
 

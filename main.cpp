@@ -6,6 +6,8 @@
 #include "viewmodels/LoginViewModel.h"
 #include "viewmodels/EstudianteViewModel.h"
 #include "viewmodels/ProfesorViewModel.h"
+#include "viewmodels/ReportsViewModel.h"
+#include "viewmodels/AdminViewModel.h"
 #include "models/PreguntaModel.h"
 #include "core/SessionManager.h"
 #include "models/Enums.h"
@@ -35,6 +37,12 @@ int main(int argc, char *argv[])
     Rep::ProfesorViewModel profesorViewModel;
     qDebug() << "✓ ProfesorViewModel creado";
 
+    Rep::ReportsViewModel reportsViewModel;
+    qDebug() << "✓ ReportsViewModel creado";
+
+    Rep::AdminViewModel adminViewModel;
+    qDebug() << "✓ AdminViewModel creado";
+
     QQmlApplicationEngine engine;
     qDebug() << "✓ QQmlApplicationEngine creado";
     
@@ -47,6 +55,8 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("loginViewModel", &loginViewModel);
     engine.rootContext()->setContextProperty("estudianteViewModel", &estudianteViewModel);
     engine.rootContext()->setContextProperty("profesorViewModel", &profesorViewModel);
+    engine.rootContext()->setContextProperty("reportsViewModel", &reportsViewModel);
+    engine.rootContext()->setContextProperty("adminViewModel", &adminViewModel);
     qDebug() << "✓ Context properties configuradas";
 
     QObject::connect(

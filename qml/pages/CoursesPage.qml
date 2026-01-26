@@ -76,7 +76,13 @@ Page {
                 Button {
                     text: "Ver Estudiantes"
                     flat: true
-                    // onClicked: stackView.push("StudentsPage.qml", { cursoId: model.id }) // Placeholder for future
+                    onClicked: {
+                        var cursoNombre = model.nombre || ("Grado " + model.grado + " - " + model.grupo)
+                        stackView.push("StudentsPage.qml", { 
+                            cursoId: model.id,
+                            cursoNombre: cursoNombre
+                        })
+                    }
                 }
             }
         }

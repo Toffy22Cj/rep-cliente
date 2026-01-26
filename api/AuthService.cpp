@@ -39,6 +39,7 @@ void AuthService::onLoginReply(QNetworkReply *reply)
     QByteArray data = reply->readAll();
     QJsonDocument doc = QJsonDocument::fromJson(data);
     QJsonObject obj = doc.object();
+    qDebug() << "Login JSON Response:" << data;
 
     LoginResponse response;
     response.success = obj["success"].toBool();
@@ -52,10 +53,15 @@ void AuthService::onLoginReply(QNetworkReply *reply)
         response.usuario.correo = userObj["correo"].toString();
         response.usuario.identificacion = userObj["identificacion"].toString();
         
-        QString rolStr = userObj["rol"].toString();
+        QString rolStr = userObj["rol"].toString().trimmed().toUpper();
+        qDebug() << "Rol recibido del backend:" << rolStr;
+        
         if (rolStr == "ADMIN") response.usuario.rol = Rol::ADMIN;
         else if (rolStr == "PROFESOR") response.usuario.rol = Rol::PROFESOR;
-        else response.usuario.rol = Rol::ESTUDIANTE;
+        else {
+            qDebug() << "Rol no reconocido o es ESTUDIANTE, asignando ESTUDIANTE. Valor original:" << userObj["rol"].toString();
+            response.usuario.rol = Rol::ESTUDIANTE;
+        }
     }
 
     emit loginFinished(response);

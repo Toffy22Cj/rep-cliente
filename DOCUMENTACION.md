@@ -60,7 +60,7 @@ http://localhost:8080/api
 ```json
 Request:
 {
-  "username": "string",
+  "identificacion": "string",
   "password": "string"
 }
 
@@ -198,6 +198,111 @@ Request: [
 Response: [...]  // Lista de asistencias guardadas
 ```
 
+#### PUT `/actividades/{id}`
+**Headers**: `Authorization: Bearer {token}`
+```json
+Request:
+{
+  "titulo": "string",
+  "tipo": "EXAMEN | QUIZ | TALLER | TAREA",
+  "descripcion": "string",
+  "fechaEntrega": "2026-01-30",
+  "duracionMinutos": 60,
+  "materiaId": 1,
+  "cursoId": 1
+}
+
+Response: true | false
+```
+
+#### GET `/profesor/actividades/{id}/respuestas`
+**Headers**: `Authorization: Bearer {token}`
+```json
+Response: [
+  {
+    "id": 1,
+    "estudianteId": 101,
+    "nombreEstudiante": "Ana Garcia",
+    "nota": 4.5,
+    "fechaEntrega": "2026-01-25T14:30:00",
+    "calificada": true
+  }
+]
+```
+
+#### POST `/profesor/respuestas/{id}/calificar?nota={nota}`
+**Headers**: `Authorization: Bearer {token}`
+```json
+// Empty Body
+Response: 200 OK
+```
+
+### APIs de Estudiante
+
+#### GET `/estudiante/{id}/materias`
+**Headers**: `Authorization: Bearer {token}`
+```json
+Response: [
+  {
+    "id": 1,
+    "nombre": "Matemáticas"
+  }
+]
+```
+
+#### GET `/estudiante/{id}/actividades`
+**Headers**: `Authorization: Bearer {token}`
+```json
+Response: [
+  {
+    "id": 1,
+    "titulo": "Tarea 1",
+    "tipo": "TAREA",
+    "materiaNombre": "Matemáticas",
+    "cursoNombre": "8A"
+  }
+]
+```
+
+#### GET `/actividades/{id}/preguntas`
+**Headers**: `Authorization: Bearer {token}`
+```json
+Response: {
+  "id": 1,
+  "titulo": "Examen Final",
+  "preguntas": [
+    {
+      "id": 10,
+      "enunciado": "¿Pregunta 1?",
+      "tipo": "MULTIPLE_CHOICE",
+      "opciones": [...]
+    }
+  ]
+}
+```
+
+#### POST `/estudiante/{id}/actividades/{actId}/resolver`
+**Headers**: `Authorization: Bearer {token}`
+```json
+Request:
+{
+  "actividadId": 1,
+  "estudianteId": 1,
+  "fechaEntrega": "2026-01-25",
+  "duracionMinutos": 45,
+  "respuestas": [
+    { "preguntaId": 10, "opcionId": 5 },
+    { "preguntaId": 11, "respuestaAbierta": "Respuesta texto" }
+  ]
+}
+
+Response:
+{
+  "nota": 5.0,
+  "resultadosPreguntas": [...]
+}
+```
+
 ### APIs de Actividades
 
 #### POST `/api/preguntas`
@@ -262,13 +367,15 @@ Rep-cliente/Rep/
     └── pages/                    # Páginas de la aplicación
         ├── LoginPage.qml
         ├── TeacherDashboard.qml
+        ├── StudentDashboard.qml
         ├── CoursesPage.qml
         ├── AttendancePage.qml
         ├── ActivityManagementPage.qml
+        ├── ActivityResolutionPage.qml
         ├── QuestionEditorPage.qml
         ├── GradingPage.qml
         ├── ReportsPage.qml
-        └── StudentDashboard.qml
+        └── StudentsPage.qml
 ```
 
 ### Componentes Principales

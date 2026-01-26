@@ -244,8 +244,9 @@ void ProfesorService::fetchAsistencia(long long cursoId, long long materiaId, co
             asistencias.append({
                 est["id"].toVariant().toLongLong(),
                 est["nombre"].toString(),
-                obj["asistio"].toBool(),
-                obj["observaciones"].toString()
+                obj["estado"].toString(),
+                obj["tipoExcusa"].toString(),
+                obj["observacion"].toString()
             });
         }
         emit asistenciaFetched(asistencias);
@@ -261,8 +262,9 @@ void ProfesorService::saveAsistencia(long long cursoId, long long materiaId, con
     for (const auto &a : asistencia) {
         QJsonObject obj;
         obj["estudianteId"] = a.estudianteId;
-        obj["asistio"] = a.asistio;
-        obj["observaciones"] = a.observaciones;
+        obj["estado"] = a.estado;
+        obj["tipoExcusa"] = a.tipoExcusa;
+        obj["observacion"] = a.observacion;
         array.append(obj);
     }
 
@@ -356,4 +358,157 @@ void ProfesorService::crearPregunta(const PreguntaRequestDTO &pregunta, const QS
 }
 
 } // namespace Rep
+
+void Rep::ProfesorService::fetchPromedios(long long cursoId, long long materiaId, const QString &token)
+{
+    QUrl url(ApiConfig::baseUrl() + QString("/profesor/reportes/promedios?cursoId=%1&materiaId=%2").arg(cursoId).arg(materiaId));
+    QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+
+        QList<ReportePromedioDTO> promedios;
+        QByteArray rawData = reply->readAll();
+        qDebug() << "Promedios RAW JSON:" << rawData;
+        
+        QJsonDocument doc = QJsonDocument::fromJson(rawData);
+        if (doc.isArray()) {
+            QJsonArray array = doc.array();
+            for (const auto &val : array) {
+                // Check if it is an array [name, avg]
+                if (val.isArray()) {
+                    QJsonArray row = val.toArray();
+                    if (row.size() >= 2) {
+                        ReportePromedioDTO dto;
+                        dto.estudianteNombre = row[0].toString();
+                        dto.promedio = (float)row[1].toDouble();
+                        promedios.append(dto);
+                    }
+                } 
+                // Check if it is an object {"nombre": "...", "promedio": ...}
+                else if (val.isObject()) {
+                    QJsonObject obj = val.toObject();
+                    if (obj.contains("nombre") && obj.contains("promedio")) {
+                        ReportePromedioDTO dto;
+                        dto.estudianteNombre = obj["nombre"].toString();
+                        dto.promedio = (float)obj["promedio"].toDouble();
+                        promedios.append(dto);
+                    }
+                    // Debug: try getting by index 0 and 1 if keys are different? 
+                    // No, object doesn't have order.
+                }
+            }
+        }
+        emit promediosFetched(promedios);
+    });
+}
+
+void Rep::ProfesorService::fetchEntregas(long long actividadId, const QString &token)
+{
+    QUrl url(ApiConfig::baseUrl() + QString("/profesor/reportes/entregas?actividadId=%1").arg(actividadId));
+    QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+
+        QList<ReporteEntregaDTO> entregas;
+        QByteArray rawData = reply->readAll();
+        qDebug() << "Entregas JSON:" << rawData;
+        QJsonArray array = QJsonDocument::fromJson(rawData).array();
+        
+        // Expected format from backend List<Object[]> for "Entregas":
+        // [estudianteId, nombreEstudiante, estado, fechaEntrega, calificada, idRespuesta, nota]
+        // We need to verify the exact order.
+        // Assuming:
+        // 0: Estudiante ID (Long)
+        // 1: Nombre (String)
+        // 2: Estado (String)
+        // 3: Fecha (String/Null)
+        // 4: Calificada (Boolean)
+        // 5: Respuesta ID (Long/Null)
+        // 6: Nota (Double/Null)
+        
+        for (const auto &val : array) {
+            QJsonArray row = val.toArray();
+            if (row.size() >= 3) {
+                ReporteEntregaDTO dto;
+                // Index 0: ID Estudiante
+                dto.estudianteId = row[0].toVariant().toLongLong();
+                // Index 1: Nombre
+                dto.estudianteNombre = row[1].toString();
+                // Index 2: Estado
+                dto.estado = row[2].toString();
+                
+                // Index 3: Fecha
+                if (row.size() > 3 && !row[3].isNull())
+                    dto.fechaEntrega = QDateTime::fromString(row[3].toString(), Qt::ISODate);
+                
+                // Index 4: Calificada
+                if (row.size() > 4) dto.calificada = row[4].toBool();
+                
+                // Index 5: Respuesta ID
+                if (row.size() > 5 && !row[5].isNull()) 
+                    dto.respuestaId = row[5].toVariant().toLongLong();
+                else 
+                    dto.respuestaId = 0;
+
+                // Index 6: Nota
+                if (row.size() > 6 && !row[6].isNull())
+                     dto.nota = (float)row[6].toDouble();
+                else
+                     dto.nota = 0.0f;
+
+                 entregas.append(dto);
+            }
+        }
+        emit entregasFetched(entregas);
+    });
+}
+
+void Rep::ProfesorService::fetchEstadisticasActividad(long long actividadId, const QString &token)
+{
+    QUrl url(ApiConfig::baseUrl() + QString("/profesor/actividades/%1/estadisticas").arg(actividadId));
+    QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+
+        QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
+        EstadisticaActividadDTO stats;
+        stats.promedio = obj["promedio"].toDouble();
+        stats.notaMinima = obj["minima"].toDouble();
+        stats.notaMaxima = obj["maxima"].toDouble();
+        stats.totalEntregas = obj["totalEntregas"].toInt();
+        stats.totalEstudiantes = obj["totalEstudiantes"].toInt();
+        
+        emit estadisticasfetched(stats);
+    });
+}
+
+void Rep::ProfesorService::exportPromedios(long long cursoId, long long materiaId, const QString &token)
+{
+    QUrl url(ApiConfig::baseUrl() + QString("/profesor/reportes/promedios/export?cursoId=%1&materiaId=%2").arg(cursoId).arg(materiaId));
+    QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, cursoId, materiaId]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+
+        QByteArray data = reply->readAll();
+        // Check content disposition header for filename if needed, or generate one
+        QString filename = QString("reporte_promedios_%1_%2.pdf").arg(cursoId).arg(materiaId);
+        emit promediosExported(data, filename);
+    });
+}
 

@@ -26,9 +26,11 @@ public:
     long long userId() const { return m_user.id; }
     QString userName() const { return m_user.nombre; }
     QString userRole() const {
-        if (m_user.rol == Rol::ADMIN) return "ADMIN";
-        if (m_user.rol == Rol::PROFESOR) return "PROFESOR";
-        return "ESTUDIANTE";
+        QString r = "ESTUDIANTE";
+        if (m_user.rol == Rol::ADMIN) r = "ADMIN";
+        else if (m_user.rol == Rol::PROFESOR) r = "PROFESOR";
+        qDebug() << "SessionManager::userRole called. Stored Rol enum value:" << (int)m_user.rol << "Returning string:" << r;
+        return r;
     }
 
     void setSession(const AuthUsuarioDTO &user, const QString &token) {

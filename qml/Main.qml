@@ -5,33 +5,41 @@ import "pages"
 ApplicationWindow {
     id: window
     visible: true
-    width: 600
+    width: 1000
     height: 800
     title: "Rep Client"
 
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: sessionManager.isAuthenticated ? dashboardComponent : loginComponent
+        initialItem: sessionManager.isAuthenticated ? getDashboardComponent() : loginComponent
+    }
+
+    function getDashboardComponent() {
+        if (sessionManager.userRole === "ESTUDIANTE") return studentDashboard
+        if (sessionManager.userRole === "PROFESOR") return teacherDashboard
+        if (sessionManager.userRole === "ADMIN") return adminDashboard
+        return loginComponent
     }
 
     Component {
         id: loginComponent
         LoginPage {
             onLoginSuccess: {
-                if (sessionManager.userRole === "ESTUDIANTE") {
-                    stackView.replace(dashboardComponent)
+                var dash = getDashboardComponent()
+                console.log("Login success, redirecting to: " + sessionManager.userRole)
+                if (dash !== loginComponent) {
+                    stackView.replace(dash)
                 } else {
-                    console.log("Rol no soportado en esta vista aún: " + sessionManager.userRole)
+                    console.error("Rol desconocido: " + sessionManager.userRole)
                 }
             }
         }
     }
 
-    Component {
-        id: dashboardComponent
-        StudentDashboard {}
-    }
+    Component { id: studentDashboard; StudentDashboard {} }
+    Component { id: teacherDashboard; TeacherDashboard {} }
+    Component { id: adminDashboard; AdminDashboard {} }
 
     Connections {
         target: sessionManager

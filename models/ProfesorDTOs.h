@@ -46,8 +46,9 @@ struct EstudianteSimplificadoDTO {
 struct AsistenciaDTO {
     long long estudianteId;
     QString nombreEstudiante;
-    bool asistio;
-    QString observaciones;
+    QString estado;        // "PRESENTE" | "NO_INGRESO" | "EXCUSA"
+    QString tipoExcusa;    // Opcional, solo si estado == "EXCUSA"
+    QString observacion;   // Texto libre (era "observaciones")
 };
 
 struct ActividadCreateDTO {
@@ -70,6 +71,29 @@ struct PreguntaRequestDTO {
     QString enunciado;
     QString tipo;
     QList<OpcionRequestDTO> opciones;
+};
+
+struct ReportePromedioDTO {
+    QString estudianteNombre;
+    float promedio;
+};
+
+struct ReporteEntregaDTO {
+    long long respuestaId; // 0 if not submitted
+    long long estudianteId;
+    QString estudianteNombre;
+    QString estado; // "ENTREGADO", "PENDIENTE"
+    QDateTime fechaEntrega;
+    bool calificada;
+    float nota;
+};
+
+struct EstadisticaActividadDTO {
+    double promedio;
+    double notaMinima;
+    double notaMaxima;
+    int totalEntregas;
+    int totalEstudiantes;
 };
 
 } // namespace Rep
