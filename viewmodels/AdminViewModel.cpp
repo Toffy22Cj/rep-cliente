@@ -18,18 +18,26 @@ QVariant UsuarioModel::data(const QModelIndex &index, int role) const {
     case IdRole: return item.id;
     case NombreRole: return item.nombre;
     case CorreoRole: return item.correo;
+    case IdentificacionRole: return item.identificacion;
     case RolRole: return item.rol;
     case ActivoRole: return item.activo;
     default: return {};
     }
 }
 QHash<int, QByteArray> UsuarioModel::roleNames() const {
-    return { {IdRole, "id"}, {NombreRole, "nombre"}, {CorreoRole, "correo"}, {RolRole, "rol"}, {ActivoRole, "activo"} };
+    return { {IdRole, "id"}, {NombreRole, "nombre"}, {CorreoRole, "correo"}, {IdentificacionRole, "identificacion"}, {RolRole, "rol"}, {ActivoRole, "activo"} };
 }
 QVariantMap UsuarioModel::get(int row) const {
     if (row < 0 || row >= m_data.size()) return {};
     const auto &item = m_data.at(row);
-    return { {"id", item.id}, {"nombre", item.nombre}, {"correo", item.correo}, {"rol", item.rol}, {"activo", item.activo} };
+    return { 
+        {"id", item.id}, 
+        {"nombre", item.nombre}, 
+        {"correo", item.correo}, 
+        {"identificacion", item.identificacion},
+        {"rol", item.rol}, 
+        {"activo", item.activo} 
+    };
 }
 
 // --- CursoAdminModel ---
@@ -115,17 +123,21 @@ void AdminViewModel::loadMaterias() {
     m_service->fetchMaterias(SessionManager::instance().token());
 }
 
-void AdminViewModel::saveUsuario(long long id, const QString &nombre, const QString &correo, const QString &rol, const QString &password, bool activo) {
+void AdminViewModel::saveUsuario(long long id, const QString &nombre, const QString &correo, const QString &identificacion, const QString &rol, const QString &password, bool activo) {
     UsuarioDTO u;
     u.id = id;
     u.nombre = nombre;
     u.correo = correo;
+    u.identificacion = identificacion;
     u.rol = rol;
     u.activo = activo;
     u.password = password;
     
-    if (id > 0) m_service->updateUsuario(u, SessionManager::instance().token());
-    // Create not implemented yet in this iteration, focus on update
+    if (id > 0) {
+        m_service->updateUsuario(u, SessionManager::instance().token());
+    } else {
+        m_service->createUsuario(u, SessionManager::instance().token());
+    }
 }
 
 void AdminViewModel::deleteUsuario(long long id) {

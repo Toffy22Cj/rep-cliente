@@ -88,7 +88,7 @@ ReportsViewModel::ReportsViewModel(QObject *parent)
 
     connect(m_service, &ProfesorService::promediosFetched, this, &ReportsViewModel::onPromediosFetched);
     connect(m_service, &ProfesorService::entregasFetched, this, &ReportsViewModel::onEntregasFetched);
-    connect(m_service, &ProfesorService::estadisticasfetched, this, &ReportsViewModel::onEstadisticasFetched);
+    connect(m_service, &ProfesorService::estadisticasFetched, this, &ReportsViewModel::onEstadisticasFetched);
     connect(m_service, &ProfesorService::promediosExported, this, &ReportsViewModel::onPromediosExported);
     
     connect(m_service, &ProfesorService::respuestaCalificada, this, [this]() {

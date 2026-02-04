@@ -73,7 +73,7 @@ public:
     Q_INVOKABLE void loadMaterias();
 
     // Actions
-    Q_INVOKABLE void saveUsuario(long long id, const QString &nombre, const QString &correo, const QString &rol, const QString &password, bool activo);
+    Q_INVOKABLE void saveUsuario(long long id, const QString &nombre, const QString &correo, const QString &identificacion, const QString &rol, const QString &password, bool activo);
     Q_INVOKABLE void deleteUsuario(long long id);
     Q_INVOKABLE void toggleUsuarioEstado(long long id, bool activo);
 

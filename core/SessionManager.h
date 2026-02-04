@@ -16,40 +16,23 @@ class SessionManager : public QObject
     Q_PROPERTY(QString userRole READ userRole NOTIFY sessionChanged)
 
 public:
-    static SessionManager& instance() {
-        static SessionManager inst;
-        return inst;
-    }
+    static SessionManager& instance();
 
-    bool isAuthenticated() const { return !m_token.isEmpty(); }
-    QString token() const { return m_token; }
-    long long userId() const { return m_user.id; }
-    QString userName() const { return m_user.nombre; }
-    QString userRole() const {
-        QString r = "ESTUDIANTE";
-        if (m_user.rol == Rol::ADMIN) r = "ADMIN";
-        else if (m_user.rol == Rol::PROFESOR) r = "PROFESOR";
-        qDebug() << "SessionManager::userRole called. Stored Rol enum value:" << (int)m_user.rol << "Returning string:" << r;
-        return r;
-    }
+    bool isAuthenticated() const;
+    QString token() const;
+    long long userId() const;
+    QString userName() const;
+    QString userRole() const;
 
-    void setSession(const AuthUsuarioDTO &user, const QString &token) {
-        m_user = user;
-        m_token = token;
-        emit sessionChanged();
-    }
+    void setSession(const AuthUsuarioDTO &user, const QString &token);
 
-    Q_INVOKABLE void clear() {
-        m_user = {};
-        m_token.clear();
-        emit sessionChanged();
-    }
+    Q_INVOKABLE void clear();
 
 signals:
     void sessionChanged();
 
 private:
-    SessionManager(QObject *parent = nullptr) : QObject(parent) {}
+    SessionManager(QObject *parent = nullptr);
     AuthUsuarioDTO m_user;
     QString m_token;
 };

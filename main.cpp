@@ -12,6 +12,8 @@
 #include "core/SessionManager.h"
 #include "models/Enums.h"
 
+#include "api/ApiConfig.h"
+
 int main(int argc, char *argv[])
 {
     QLoggingCategory::setFilterRules(
@@ -21,6 +23,8 @@ int main(int argc, char *argv[])
     );
 
     qDebug() << "=== APP INICIANDO ===";
+    Rep::ApiConfig::setupSSL();
+    qDebug() << "✓ SSL Configurado";
     
     QGuiApplication app(argc, argv);
     qDebug() << "✓ QGuiApplication creado";
@@ -48,7 +52,30 @@ int main(int argc, char *argv[])
     
     // Register types
     qmlRegisterType<Rep::PreguntaModel>("Rep", 1, 0, "PreguntaModel");
+    
+    // Register DTOs for signal/slot connections
+    qRegisterMetaType<Rep::LoginResponse>("LoginResponse");
+    qRegisterMetaType<Rep::MateriaDTO>("MateriaDTO");
+    qRegisterMetaType<QList<Rep::MateriaDTO>>("QList<Rep::MateriaDTO>");
+    qRegisterMetaType<Rep::ActividadDTO>("ActividadDTO");
+    qRegisterMetaType<QList<Rep::ActividadDTO>>("QList<Rep::ActividadDTO>");
     qRegisterMetaType<Rep::ActividadConPreguntasDTO>("ActividadConPreguntasDTO");
+    qRegisterMetaType<Rep::ResultadoActividadDTO>("ResultadoActividadDTO");
+    qRegisterMetaType<Rep::ProfesorDashboardDTO>("ProfesorDashboardDTO");
+    qRegisterMetaType<Rep::CursoDTO>("CursoDTO");
+    qRegisterMetaType<QList<Rep::CursoDTO>>("QList<Rep::CursoDTO>");
+    qRegisterMetaType<Rep::MateriaAsignadaDTO>("MateriaAsignadaDTO");
+    qRegisterMetaType<QList<Rep::MateriaAsignadaDTO>>("QList<Rep::MateriaAsignadaDTO>");
+    qRegisterMetaType<Rep::EstudianteSimplificadoDTO>("EstudianteSimplificadoDTO");
+    qRegisterMetaType<QList<Rep::EstudianteSimplificadoDTO>>("QList<Rep::EstudianteSimplificadoDTO>");
+    qRegisterMetaType<Rep::AsistenciaDTO>("AsistenciaDTO");
+    qRegisterMetaType<QList<Rep::AsistenciaDTO>>("QList<Rep::AsistenciaDTO>");
+    qRegisterMetaType<Rep::ReportePromedioDTO>("ReportePromedioDTO");
+    qRegisterMetaType<QList<Rep::ReportePromedioDTO>>("QList<Rep::ReportePromedioDTO>");
+    qRegisterMetaType<Rep::ReporteEntregaDTO>("ReporteEntregaDTO");
+    qRegisterMetaType<QList<Rep::ReporteEntregaDTO>>("QList<Rep::ReporteEntregaDTO>");
+    qRegisterMetaType<Rep::EstadisticaActividadDTO>("EstadisticaActividadDTO");
+    
     qDebug() << "✓ Tipos registrados";
 
     engine.rootContext()->setContextProperty("sessionManager", &sessionManager);
@@ -59,6 +86,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("adminViewModel", &adminViewModel);
     qDebug() << "✓ Context properties configuradas";
 
+    qDebug() << "⏳ Conectando objectCreationFailed...";
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

@@ -4,11 +4,12 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include "BaseService.h"
 #include "../models/AuthDTOs.h"
 
 namespace Rep {
 
-class AuthService : public QObject
+class AuthService : public BaseService
 {
     Q_OBJECT
 public:
@@ -23,7 +24,7 @@ private slots:
     void onLoginReply(QNetworkReply *reply);
 
 private:
-    QNetworkAccessManager *m_networkManager;
+    // QNetworkAccessManager *m_networkManager; // Inherited from BaseService
 };
 
 } // namespace Rep

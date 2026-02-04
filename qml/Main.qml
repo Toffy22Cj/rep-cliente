@@ -24,29 +24,42 @@ ApplicationWindow {
 
     Component {
         id: loginComponent
-        LoginPage {
-            onLoginSuccess: {
-                var dash = getDashboardComponent()
-                console.log("Login success, redirecting to: " + sessionManager.userRole)
-                if (dash !== loginComponent) {
-                    stackView.replace(dash)
-                } else {
-                    console.error("Rol desconocido: " + sessionManager.userRole)
-                }
-            }
-        }
+        LoginPage {}
     }
 
     Component { id: studentDashboard; StudentDashboard {} }
     Component { id: teacherDashboard; TeacherDashboard {} }
     Component { id: adminDashboard; AdminDashboard {} }
 
-    Connections {
-        target: sessionManager
-        function onSessionChanged() {
-            if (!sessionManager.isAuthenticated) {
-                stackView.replace(loginComponent)
-            }
+    Component.onCompleted: {
+        console.log("Main.qml Component.onCompleted iniciado")
+        console.log("loginViewModel definido:", loginViewModel !== undefined)
+        console.log("sessionManager definido:", sessionManager !== undefined)
+        
+        if (loginViewModel !== undefined) {
+            loginViewModel.loginSuccess.connect(handleLoginSuccess)
+            console.log("✓ Conexión establecida: loginViewModel.loginSuccess")
+        } else {
+            console.error("❌ loginViewModel no está disponible en Main.qml")
+        }
+        
+        if (sessionManager !== undefined) {
+            sessionManager.sessionChanged.connect(handleSessionChanged)
+            console.log("✓ Conexión establecida: sessionManager.sessionChanged")
+        } else {
+            console.error("❌ sessionManager no está disponible en Main.qml")
+        }
+    }
+    
+    function handleLoginSuccess(role) {
+        console.log("Main.qml: Login OK, rol:", role)
+        stackView.replace(getDashboardComponent())
+    }
+    
+    function handleSessionChanged() {
+        console.log("Main.qml: Session changed")
+        if (!sessionManager.isAuthenticated) {
+            stackView.replace(loginComponent)
         }
     }
 }

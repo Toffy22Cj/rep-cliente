@@ -10,6 +10,7 @@ qt_standard_project_setup(REQUIRES 6.8)
 
 set(HEADERS
     api/ApiConfig.h
+    api/BaseService.h
     api/AuthService.h
     api/EstudianteService.h
     api/ProfesorService.h
@@ -28,23 +29,25 @@ set(HEADERS
     viewmodels/LoginViewModel.h
     viewmodels/EstudianteViewModel.h
     viewmodels/ProfesorViewModel.h
-
-    viewmodels/ProfesorViewModel.h
     viewmodels/ReportsViewModel.h
     viewmodels/AdminViewModel.h
     api/AdminService.h
+    utils/SecureTokenStorage.h
 )
 
 set(SOURCES
     main.cpp
+    api/BaseService.cpp
     api/AuthService.cpp
     api/EstudianteService.cpp
     api/ProfesorService.cpp
+    core/SessionManager.cpp
     models/PreguntaModel.cpp
+    utils/SecureTokenStorage.cpp
+    utils/ValidationUtils.cpp
+    utils/Logger.cpp
     viewmodels/LoginViewModel.cpp
     viewmodels/EstudianteViewModel.cpp
-    viewmodels/ProfesorViewModel.cpp
-
     viewmodels/ProfesorViewModel.cpp
     viewmodels/ReportsViewModel.cpp
     viewmodels/AdminViewModel.cpp
@@ -90,8 +93,22 @@ set_target_properties(appRep PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+# Removed QtKeychain dependency
+
 target_link_libraries(appRep
     PRIVATE Qt6::Quick Qt6::Network
+)
+
+include(FetchContent)
+FetchContent_Declare(
+    qt6keychain
+    GIT_REPOSITORY https://github.com/frankosterfeld/qtkeychain.git
+    GIT_TAG        master
+)
+FetchContent_MakeAvailable(qt6keychain)
+
+target_link_libraries(appRep
+    PRIVATE qt6keychain
 )
 
 include(GNUInstallDirs)

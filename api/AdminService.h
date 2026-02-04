@@ -16,6 +16,7 @@ public:
 
     // Users
     void fetchUsuarios(const QString &token);
+    void createUsuario(const UsuarioDTO &usuario, const QString &token);
     void updateUsuario(const UsuarioDTO &usuario, const QString &token);
     void deleteUsuario(long long id, const QString &token);
     void toggleUsuarioEstado(long long id, bool activo, const QString &token);

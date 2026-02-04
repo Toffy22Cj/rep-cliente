@@ -10,6 +10,7 @@ struct UsuarioDTO {
     long long id;
     QString nombre;
     QString correo;
+    QString identificacion; // Required for creation
     QString rol; // "ADMIN", "PROFESOR", "ESTUDIANTE"
     bool activo;
     QString password; // Optional, for updates

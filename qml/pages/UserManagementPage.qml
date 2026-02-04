@@ -47,7 +47,22 @@ Page {
                 // Filtering to be implemented later
             }
             Button {
-                text: "↻ Actualizar"
+                text: "+ Crear Usuario"
+                highlighted: true
+                onClicked: {
+                    editDialog.userId = 0
+                    editDialog.title = "Crear Usuario"
+                    nameField.clear()
+                    emailField.clear()
+                    identField.clear()
+                    identField.enabled = true
+                    rolCombo.currentIndex = 0
+                    passField.clear()
+                    editDialog.open()
+                }
+            }
+            Button {
+                text: "↻"
                 onClicked: adminViewModel.loadUsuarios()
             }
         }
@@ -110,7 +125,10 @@ Page {
                             editDialog.userId = model.id
                             nameField.text = model.nombre
                             emailField.text = model.correo
+                            identField.text = model.identificacion ? model.identificacion : ""
+                            identField.enabled = false // Usually can't edit ID
                             rolCombo.currentIndex = rolCombo.indexOfValue(model.rol)
+                            editDialog.title = "Editar Usuario"
                             editDialog.open()
                         }
                     }
@@ -135,6 +153,7 @@ Page {
             
             TextField { id: nameField; placeholderText: "Nombre"; Layout.fillWidth: true }
             TextField { id: emailField; placeholderText: "Correo"; Layout.fillWidth: true }
+            TextField { id: identField; placeholderText: "Identificación"; Layout.fillWidth: true }
             ComboBox {
                 id: rolCombo
                 Layout.fillWidth: true
@@ -153,9 +172,10 @@ Page {
                 userId, 
                 nameField.text, 
                 emailField.text, 
+                identField.text,
                 rolCombo.currentText,
                 passField.text,
-                true // Keep active default true for now on edit
+                true
             )
             passField.clear()
         }

@@ -48,7 +48,7 @@ signals:
     // Signals Reportes
     void promediosFetched(const QList<ReportePromedioDTO> &promedios);
     void entregasFetched(const QList<ReporteEntregaDTO> &entregas);
-    void estadisticasfetched(const EstadisticaActividadDTO &estadisticas);
+    void estadisticasFetched(const EstadisticaActividadDTO &estadisticas);
     void promediosExported(const QByteArray &pdfData, const QString &filename);
     void actividadCreada(long long id);
     void actividadActualizada(bool success);

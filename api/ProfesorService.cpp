@@ -490,7 +490,7 @@ void Rep::ProfesorService::fetchEstadisticasActividad(long long actividadId, con
         stats.totalEntregas = obj["totalEntregas"].toInt();
         stats.totalEstudiantes = obj["totalEstudiantes"].toInt();
         
-        emit estadisticasfetched(stats);
+        emit estadisticasFetched(stats);
     });
 }
 
