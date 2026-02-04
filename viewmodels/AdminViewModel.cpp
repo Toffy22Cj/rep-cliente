@@ -84,6 +84,47 @@ QVariantMap MateriaAdminModel::get(int row) const {
     return { {"id", item.id}, {"nombre", item.nombre} };
 }
 
+// --- AsignacionModel ---
+AsignacionModel::AsignacionModel(QObject *parent) : QAbstractListModel(parent) {}
+void AsignacionModel::updateData(const QList<AsignacionDTO> &data) {
+    beginResetModel();
+    m_data = data;
+    endResetModel();
+}
+int AsignacionModel::rowCount(const QModelIndex &) const { return m_data.size(); }
+QVariant AsignacionModel::data(const QModelIndex &index, int role) const {
+    if (!index.isValid() || index.row() >= m_data.size()) return {};
+    const auto &item = m_data.at(index.row());
+    switch(role) {
+    case IdRole: return item.id;
+    case ProfesorIdRole: return item.profesorId;
+    case ProfesorNombreRole: return item.profesorNombre;
+    case MateriaIdRole: return item.materiaId;
+    case MateriaNombreRole: return item.materiaNombre;
+    case CursoIdRole: return item.cursoId;
+    case CursoNombreRole: return item.cursoNombre;
+    default: return {};
+    }
+}
+QHash<int, QByteArray> AsignacionModel::roleNames() const {
+    return { 
+        {IdRole, "id"}, 
+        {ProfesorIdRole, "profesorId"}, {ProfesorNombreRole, "profesorNombre"}, 
+        {MateriaIdRole, "materiaId"}, {MateriaNombreRole, "materiaNombre"},
+        {CursoIdRole, "cursoId"}, {CursoNombreRole, "cursoNombre"}
+    };
+}
+QVariantMap AsignacionModel::get(int row) const {
+    if (row < 0 || row >= m_data.size()) return {};
+    const auto &item = m_data.at(row);
+    return { 
+        {"id", item.id}, 
+        {"profesorId", item.profesorId}, {"profesorNombre", item.profesorNombre}, 
+        {"materiaId", item.materiaId}, {"materiaNombre", item.materiaNombre},
+        {"cursoId", item.cursoId}, {"cursoNombre", item.cursoNombre}
+    };
+}
+
 // --- AdminViewModel ---
 
 AdminViewModel::AdminViewModel(QObject *parent)
@@ -91,11 +132,13 @@ AdminViewModel::AdminViewModel(QObject *parent)
       m_service(new AdminService(this)),
       m_usuarioModel(new UsuarioModel(this)),
       m_cursoModel(new CursoAdminModel(this)),
-      m_materiaModel(new MateriaAdminModel(this))
+      m_materiaModel(new MateriaAdminModel(this)),
+      m_asignacionModel(new AsignacionModel(this))
 {
     connect(m_service, &AdminService::usuariosFetched, this, &AdminViewModel::onUsuariosFetched);
     connect(m_service, &AdminService::cursosFetched, this, &AdminViewModel::onCursosFetched);
     connect(m_service, &AdminService::materiasFetched, this, &AdminViewModel::onMateriasFetched);
+    connect(m_service, &AdminService::asignacionesFetched, this, &AdminViewModel::onAsignacionesFetched);
     
     connect(m_service, &AdminService::operationSuccess, this, &AdminViewModel::operationSuccess);
     connect(m_service, &AdminService::errorOccurred, this, &AdminViewModel::errorOccurred);
@@ -104,6 +147,7 @@ AdminViewModel::AdminViewModel(QObject *parent)
 UsuarioModel* AdminViewModel::usuarioModel() const { return m_usuarioModel; }
 CursoAdminModel* AdminViewModel::cursoModel() const { return m_cursoModel; }
 MateriaAdminModel* AdminViewModel::materiaModel() const { return m_materiaModel; }
+AsignacionModel* AdminViewModel::asignacionModel() const { return m_asignacionModel; }
 
 void AdminViewModel::loadUsuarios() {
     m_service->fetchUsuarios(SessionManager::instance().token());
@@ -113,6 +157,9 @@ void AdminViewModel::loadCursos() {
 }
 void AdminViewModel::loadMaterias() {
     m_service->fetchMaterias(SessionManager::instance().token());
+}
+void AdminViewModel::loadAsignaciones() {
+    m_service->fetchAsignaciones(SessionManager::instance().token());
 }
 
 void AdminViewModel::saveUsuario(long long id, const QString &nombre, const QString &correo, const QString &rol, const QString &password, bool activo) {
@@ -155,13 +202,27 @@ void AdminViewModel::createMateria(const QString &nombre) {
     m_service->createMateria(m, SessionManager::instance().token());
 }
 
+void AdminViewModel::updateMateria(long long id, const QString &nombre) {
+    MateriaAdminDTO m; m.id = id; m.nombre = nombre;
+    m_service->updateMateria(m, SessionManager::instance().token());
+}
+
 void AdminViewModel::deleteMateria(long long id) {
     m_service->deleteMateria(id, SessionManager::instance().token());
+}
+
+void AdminViewModel::createAsignacion(long long profesorId, long long materiaId, long long cursoId) {
+    m_service->createAsignacion(profesorId, materiaId, cursoId, SessionManager::instance().token());
+}
+
+void AdminViewModel::deleteAsignacion(long long id) {
+    m_service->deleteAsignacion(id, SessionManager::instance().token());
 }
 
 // Slots
 void AdminViewModel::onUsuariosFetched(const QList<UsuarioDTO> &data) { m_usuarioModel->updateData(data); }
 void AdminViewModel::onCursosFetched(const QList<CursoAdminDTO> &data) { m_cursoModel->updateData(data); }
 void AdminViewModel::onMateriasFetched(const QList<MateriaAdminDTO> &data) { m_materiaModel->updateData(data); }
+void AdminViewModel::onAsignacionesFetched(const QList<AsignacionDTO> &data) { m_asignacionModel->updateData(data); }
 
 } // namespace Rep

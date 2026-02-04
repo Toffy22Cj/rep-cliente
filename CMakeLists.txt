@@ -82,6 +82,7 @@ set(QML_FILES
     qml/pages/UserManagementPage.qml
     qml/pages/CourseManagementPage.qml
     qml/pages/SubjectManagementPage.qml
+    qml/pages/AssignmentsManagementPage.qml
     qml/components/DatePicker.qml
 )
 

@@ -222,6 +222,23 @@ void AdminService::createMateria(const MateriaAdminDTO &materia, const QString &
     });
 }
 
+void AdminService::updateMateria(const MateriaAdminDTO &materia, const QString &token)
+{
+    QUrl url(ApiConfig::baseUrl() + QString("/admin/materias/%1").arg(materia.id));
+    QJsonObject obj;
+    obj["nombre"] = materia.nombre;
+
+    QNetworkReply *reply = m_networkManager->put(createRequest(url, token), QJsonDocument(obj).toJson());
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+        emit operationSuccess("Materia actualizada");
+    });
+}
+
 void AdminService::deleteMateria(long long id, const QString &token)
 {
     QUrl url(ApiConfig::baseUrl() + QString("/admin/materias/%1").arg(id));
@@ -233,6 +250,99 @@ void AdminService::deleteMateria(long long id, const QString &token)
             return;
         }
         emit operationSuccess("Materia eliminada");
+    });
+}
+
+
+
+// --- Asignaciones ---
+
+void AdminService::fetchAsignaciones(const QString &token)
+{
+    QUrl url(ApiConfig::baseUrl() + "/admin/asignaciones");
+    QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+
+        QByteArray data = reply->readAll();
+        qDebug() << "fetchAsignaciones JSON:" << data;
+
+        QList<AsignacionDTO> asignaciones;
+        QJsonArray array = QJsonDocument::fromJson(data).array();
+        for (const auto &val : array) {
+            QJsonObject obj = val.toObject();
+            AsignacionDTO a;
+            a.id = obj["id"].toVariant().toLongLong();
+            
+            // Profesor info
+            if (obj["profesor"].isObject()) {
+                QJsonObject prof = obj["profesor"].toObject();
+                a.profesorId = prof["id"].toVariant().toLongLong();
+                a.profesorNombre = prof["nombre"].toString();
+            }
+
+            // Materia info
+            if (obj["materia"].isObject()) {
+                QJsonObject mat = obj["materia"].toObject();
+                a.materiaId = mat["id"].toVariant().toLongLong();
+                a.materiaNombre = mat["nombre"].toString();
+            }
+
+            // Curso info
+            if (obj["curso"].isObject()) {
+                QJsonObject cur = obj["curso"].toObject();
+                a.cursoId = cur["id"].toVariant().toLongLong();
+                
+                QString gradoStr = QString::number(cur["grado"].toInt());
+                QString grupo = cur["grupo"].toString();
+                a.cursoNombre = gradoStr + "° " + grupo;
+            }
+
+            asignaciones.append(a);
+        }
+        emit asignacionesFetched(asignaciones);
+    });
+}
+
+void AdminService::createAsignacion(long long profesorId, long long materiaId, long long cursoId, const QString &token)
+{
+    QUrl url(ApiConfig::baseUrl() + "/admin/asignaciones");
+    QJsonObject obj;
+    QJsonObject prof; prof["id"] = profesorId;
+    QJsonObject mat; mat["id"] = materiaId;
+    QJsonObject cur; cur["id"] = cursoId;
+    
+    obj["profesor"] = prof;
+    obj["materia"] = mat;
+    obj["curso"] = cur;
+
+    QNetworkReply *reply = m_networkManager->post(createRequest(url, token), QJsonDocument(obj).toJson());
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+        emit operationSuccess("Asignación creada correctamente");
+        // Opt: Fetch again to update list, or rely on caller
+    });
+}
+
+void AdminService::deleteAsignacion(long long id, const QString &token)
+{
+    QUrl url(ApiConfig::baseUrl() + QString("/admin/asignaciones/%1").arg(id));
+    QNetworkReply *reply = m_networkManager->deleteResource(createRequest(url, token));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit errorOccurred(reply->errorString());
+            return;
+        }
+        emit operationSuccess("Asignación eliminada");
     });
 }
 

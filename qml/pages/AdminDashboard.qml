@@ -61,6 +61,7 @@ Page {
                 { title: "Usuarios", icon: "👥", page: "UserManagementPage.qml", color: "#3498db" },
                 { title: "Cursos", icon: "📚", page: "CourseManagementPage.qml", color: "#e67e22" },
                 { title: "Materias", icon: "📖", page: "SubjectManagementPage.qml", color: "#9b59b6" },
+                { title: "Asignaciones", icon: "🔗", page: "AssignmentsManagementPage.qml", color: "#16a085" },
                 { title: "Configuración", icon: "⚙️", page: "", color: "#7f8c8d" }
             ]
 

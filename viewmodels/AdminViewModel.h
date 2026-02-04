@@ -52,6 +52,25 @@ private:
     QList<MateriaAdminDTO> m_data;
 };
 
+class AsignacionModel : public QAbstractListModel {
+    Q_OBJECT
+public:
+    enum Roles { 
+        IdRole = Qt::UserRole + 1, 
+        ProfesorIdRole, ProfesorNombreRole, 
+        MateriaIdRole, MateriaNombreRole,
+        CursoIdRole, CursoNombreRole
+    };
+    explicit AsignacionModel(QObject *parent = nullptr);
+    void updateData(const QList<AsignacionDTO> &data);
+    int rowCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
+    Q_INVOKABLE QVariantMap get(int row) const;
+private:
+    QList<AsignacionDTO> m_data;
+};
+
 // --- ViewModel ---
 
 class AdminViewModel : public QObject {
@@ -59,6 +78,7 @@ class AdminViewModel : public QObject {
     Q_PROPERTY(UsuarioModel* usuarioModel READ usuarioModel CONSTANT)
     Q_PROPERTY(CursoAdminModel* cursoModel READ cursoModel CONSTANT)
     Q_PROPERTY(MateriaAdminModel* materiaModel READ materiaModel CONSTANT)
+    Q_PROPERTY(AsignacionModel* asignacionModel READ asignacionModel CONSTANT)
 
 public:
     explicit AdminViewModel(QObject *parent = nullptr);
@@ -66,11 +86,13 @@ public:
     UsuarioModel* usuarioModel() const;
     CursoAdminModel* cursoModel() const;
     MateriaAdminModel* materiaModel() const;
+    AsignacionModel* asignacionModel() const;
 
     // Loaders
     Q_INVOKABLE void loadUsuarios();
     Q_INVOKABLE void loadCursos();
     Q_INVOKABLE void loadMaterias();
+    Q_INVOKABLE void loadAsignaciones();
 
     // Actions
     Q_INVOKABLE void saveUsuario(long long id, const QString &nombre, const QString &correo, const QString &rol, const QString &password, bool activo);
@@ -82,7 +104,11 @@ public:
     Q_INVOKABLE void deleteCurso(long long id);
 
     Q_INVOKABLE void createMateria(const QString &nombre);
+    Q_INVOKABLE void updateMateria(long long id, const QString &nombre);
     Q_INVOKABLE void deleteMateria(long long id);
+
+    Q_INVOKABLE void createAsignacion(long long profesorId, long long materiaId, long long cursoId);
+    Q_INVOKABLE void deleteAsignacion(long long id);
 
 signals:
     void operationSuccess(const QString &msg);
@@ -92,12 +118,14 @@ private slots:
     void onUsuariosFetched(const QList<UsuarioDTO> &data);
     void onCursosFetched(const QList<CursoAdminDTO> &data);
     void onMateriasFetched(const QList<MateriaAdminDTO> &data);
+    void onAsignacionesFetched(const QList<AsignacionDTO> &data);
 
 private:
     AdminService *m_service;
     UsuarioModel *m_usuarioModel;
     CursoAdminModel *m_cursoModel;
     MateriaAdminModel *m_materiaModel;
+    AsignacionModel *m_asignacionModel;
 };
 
 } // namespace Rep

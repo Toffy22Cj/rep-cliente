@@ -23,27 +23,28 @@ public:
     }
 
     bool isAuthenticated() const { 
-        return !token().isEmpty() && !SecureTokenStorage::instance().isTokenExpired(); 
+        return !m_token.isEmpty() && !SecureTokenStorage::instance().isTokenExpired(); 
     }
-    QString token() const { return SecureTokenStorage::instance().getToken(); }
+    QString token() const { return m_token; }
     long long userId() const { return m_user.id; }
     QString userName() const { return m_user.nombre; }
     QString userRole() const {
         QString r = "ESTUDIANTE";
         if (m_user.rol == Rol::ADMIN) r = "ADMIN";
         else if (m_user.rol == Rol::PROFESOR) r = "PROFESOR";
-        qDebug() << "SessionManager::userRole called. Stored Rol enum value:" << (int)m_user.rol << "Returning string:" << r;
         return r;
     }
 
     void setSession(const AuthUsuarioDTO &user, const QString &token) {
         m_user = user;
+        m_token = token;
         SecureTokenStorage::instance().saveToken(token);
         emit sessionChanged();
     }
 
     Q_INVOKABLE void clear() {
         m_user = {};
+        m_token.clear();
         SecureTokenStorage::instance().deleteToken();
         emit sessionChanged();
     }
@@ -52,9 +53,16 @@ signals:
     void sessionChanged();
 
 private:
-    SessionManager(QObject *parent = nullptr) : QObject(parent) {}
+    SessionManager(QObject *parent = nullptr) : QObject(parent) {
+        // Init cache from storage
+        m_token = SecureTokenStorage::instance().getToken();
+        if (!m_token.isEmpty()) {
+            qDebug() << "SessionManager: Token loaded from persistent storage";
+        }
+    }
 
     AuthUsuarioDTO m_user;
+    QString m_token;
 };
 
 } // namespace Rep

@@ -40,7 +40,7 @@ Page {
         Button {
             text: "+ Nuevo Curso"
             highlighted: true
-            onClicked: createDialog.open()
+            onClicked: createDialog.openCreate()
         }
 
         ListView {
@@ -77,6 +77,12 @@ Page {
                     }
 
                     Button {
+                        text: "✏️"
+                        flat: true
+                        onClicked: createDialog.openEdit(model.id, model.grado, model.grupo)
+                    }
+
+                    Button {
                         text: "🗑️"
                         flat: true
                         onClicked: adminViewModel.deleteCurso(model.id)
@@ -91,28 +97,51 @@ Page {
         anchors.centerIn: parent
         width: 300
         modal: true
-        title: "Nuevo Curso"
+        title: editMode ? "Editar Curso" : "Nuevo Curso"
         standardButtons: Dialog.Save | Dialog.Cancel
+
+        property bool editMode: false
+        property int editId: 0
+
+        function openCreate() {
+            editMode = false
+            editId = 0
+            gradoField.text = ""
+            grupoField.text = ""
+            open()
+        }
+
+        function openEdit(id, grado, grupo) {
+            editMode = true
+            editId = id
+            gradoField.text = grado
+            grupoField.text = grupo
+            open()
+        }
 
         ColumnLayout {
             width: parent.width
             spacing: 15
-            
-            TextField { 
+
+            TextField {
                 id: gradoField
-                placeholderText: "Grado (Ej: 11)" 
+                placeholderText: "Grado (Ej: 11)"
                 validator: IntValidator { bottom: 1; top: 12 }
-                Layout.fillWidth: true 
+                Layout.fillWidth: true
             }
-            TextField { 
+            TextField {
                 id: grupoField
-                placeholderText: "Grupo (Ej: A)" 
-                Layout.fillWidth: true 
+                placeholderText: "Grupo (Ej: A)"
+                Layout.fillWidth: true
             }
         }
 
         onAccepted: {
-            adminViewModel.createCurso(parseInt(gradoField.text), grupoField.text)
+            if (editMode) {
+                adminViewModel.updateCurso(editId, parseInt(gradoField.text), grupoField.text)
+            } else {
+                adminViewModel.createCurso(parseInt(gradoField.text), grupoField.text)
+            }
             gradoField.clear(); grupoField.clear()
         }
     }

@@ -40,7 +40,7 @@ Page {
         Button {
             text: "+ Nueva Materia"
             highlighted: true
-            onClicked: createDialog.open()
+            onClicked: createDialog.openCreate()
         }
 
         ListView {
@@ -77,6 +77,12 @@ Page {
                     }
 
                     Button {
+                        text: "✏️"
+                        flat: true
+                        onClicked: createDialog.openEdit(model.id, model.nombre)
+                    }
+
+                    Button {
                         text: "🗑️"
                         flat: true
                         onClicked: adminViewModel.deleteMateria(model.id)
@@ -91,17 +97,38 @@ Page {
         anchors.centerIn: parent
         width: 300
         modal: true
-        title: "Nueva Materia"
+        title: editMode ? "Editar Materia" : "Nueva Materia"
         standardButtons: Dialog.Save | Dialog.Cancel
 
-        TextField { 
+        property bool editMode: false
+        property int editId: 0
+
+        function openCreate() {
+            editMode = false
+            editId = 0
+            nombreField.text = ""
+            open()
+        }
+
+        function openEdit(id, nombre) {
+            editMode = true
+            editId = id
+            nombreField.text = nombre
+            open()
+        }
+
+        TextField {
             id: nombreField
-            placeholderText: "Nombre de la Materia" 
+            placeholderText: "Nombre de la Materia"
             width: parent.width
         }
 
         onAccepted: {
-            adminViewModel.createMateria(nombreField.text)
+            if (editMode) {
+                adminViewModel.updateMateria(editId, nombreField.text)
+            } else {
+                adminViewModel.createMateria(nombreField.text)
+            }
             nombreField.clear()
         }
     }
