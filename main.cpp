@@ -10,6 +10,8 @@
 #include "viewmodels/AdminViewModel.h"
 #include "models/PreguntaModel.h"
 #include "core/SessionManager.h"
+#include "core/security/SecureTokenStorage.h"
+#include "core/security/QtKeychainCredentialStore.h"
 #include "models/Enums.h"
 
 int main(int argc, char *argv[])
@@ -24,6 +26,11 @@ int main(int argc, char *argv[])
     
     QGuiApplication app(argc, argv);
     qDebug() << "✓ QGuiApplication creado";
+
+    // Setup Secure Storage
+    auto keychainStore = std::make_unique<Rep::Security::QtKeychainCredentialStore>();
+    Rep::SecureTokenStorage::instance().setBackend(std::move(keychainStore));
+    qDebug() << "✓ SecureTokenStorage configurado";
 
     Rep::SessionManager &sessionManager = Rep::SessionManager::instance();
     qDebug() << "✓ SessionManager creado";

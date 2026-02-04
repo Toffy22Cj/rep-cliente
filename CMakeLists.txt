@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Network)
 
+list(APPEND CMAKE_PREFIX_PATH "/usr/lib/x86_64-linux-gnu/cmake")
+find_package(Qt6Keychain REQUIRED)
+
 qt_standard_project_setup(REQUIRES 6.8)
 
 set(HEADERS
@@ -33,6 +36,9 @@ set(HEADERS
     viewmodels/ReportsViewModel.h
     viewmodels/AdminViewModel.h
     api/AdminService.h
+    core/security/ICredentialStore.h
+    core/security/SecureTokenStorage.h
+    core/security/QtKeychainCredentialStore.h
 )
 
 set(SOURCES
@@ -49,6 +55,8 @@ set(SOURCES
     viewmodels/ReportsViewModel.cpp
     viewmodels/AdminViewModel.cpp
     api/AdminService.cpp
+    core/security/SecureTokenStorage.cpp
+    core/security/QtKeychainCredentialStore.cpp
 )
 
 qt_add_executable(appRep
@@ -91,7 +99,7 @@ set_target_properties(appRep PROPERTIES
 )
 
 target_link_libraries(appRep
-    PRIVATE Qt6::Quick Qt6::Network
+    PRIVATE Qt6::Quick Qt6::Network qt6keychain
 )
 
 include(GNUInstallDirs)

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "../models/AuthDTOs.h"
+#include "security/SecureTokenStorage.h"
 
 namespace Rep {
 
@@ -21,8 +22,10 @@ public:
         return inst;
     }
 
-    bool isAuthenticated() const { return !m_token.isEmpty(); }
-    QString token() const { return m_token; }
+    bool isAuthenticated() const { 
+        return !token().isEmpty() && !SecureTokenStorage::instance().isTokenExpired(); 
+    }
+    QString token() const { return SecureTokenStorage::instance().getToken(); }
     long long userId() const { return m_user.id; }
     QString userName() const { return m_user.nombre; }
     QString userRole() const {
@@ -35,13 +38,13 @@ public:
 
     void setSession(const AuthUsuarioDTO &user, const QString &token) {
         m_user = user;
-        m_token = token;
+        SecureTokenStorage::instance().saveToken(token);
         emit sessionChanged();
     }
 
     Q_INVOKABLE void clear() {
         m_user = {};
-        m_token.clear();
+        SecureTokenStorage::instance().deleteToken();
         emit sessionChanged();
     }
 
@@ -50,8 +53,8 @@ signals:
 
 private:
     SessionManager(QObject *parent = nullptr) : QObject(parent) {}
+
     AuthUsuarioDTO m_user;
-    QString m_token;
 };
 
 } // namespace Rep

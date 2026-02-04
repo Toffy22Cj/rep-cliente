@@ -94,12 +94,12 @@ QString m_token;  // Almacenado en memoria sin protección
 **Mejoras Necesarias:**
 
 ```cpp
-// ✅ Usar QSecureSettings o encriptación local
+// ✅ Usar Abstracción de Store Seguro
+class ICredentialStore { ... };
+
 class SecureTokenStorage {
-    static void saveToken(const QString &token);
-    static QString getToken();
-    static void deleteToken();
-    static bool isTokenExpired();
+    // Backend intercambiable (Libsecret, KeyChain, WinCred)
+    void setBackend(ICredentialStore* backend);
 };
 ```
 
@@ -219,8 +219,8 @@ bool isTokenExpired() { return false; }  // No implementado
 
 **Solución:**
 
-- Usar `QKeyChain` (librería Qt) para almacenar tokens
-- Encriptación local de datos sensibles
+- Usar integración nativa con System Keyring (vía abstracción)
+- Encriptación local de preferencias de usuario
 
 ---
 
