@@ -2,6 +2,7 @@
 #define ESTUDIANTEVIEWMODEL_H
 
 #include <QObject>
+#include <QDateTime>
 #include "../api/EstudianteService.h"
 #include "../models/MateriaModel.h"
 #include "../models/ActividadModel.h"
@@ -25,7 +26,7 @@ public:
 
     MateriaModel* materiaModel() const { return m_materiaModel; }
     ActividadModel* actividadModel() const { return m_actividadModel; }
-    bool isLoading() const { return m_isLoading; }
+    bool isLoading() const { return m_pendingRequests > 0; }
 
     Q_INVOKABLE void loadMaterias();
     Q_INVOKABLE void loadActividades();
@@ -50,7 +51,11 @@ private:
     MateriaModel *m_materiaModel;
     ActividadModel *m_actividadModel;
     PreguntaModel *m_preguntaModel;
-    bool m_isLoading = false;
+    int m_pendingRequests = 0;
+    QDateTime m_activityStartedAt;
+
+    void beginRequest();
+    void endRequest();
 
     long long m_currentActivityId = 0;
     QString m_currentActivityTitle;

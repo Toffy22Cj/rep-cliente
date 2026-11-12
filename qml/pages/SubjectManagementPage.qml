@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Gestión de Materias"
-    background: Rectangle { color: "#f4f6f9" }
+    background: Rectangle { color: Theme.background }
     property var stackView: StackView.view
 
     Component.onCompleted: adminViewModel.loadMaterias()
@@ -19,18 +20,7 @@ Page {
         }
     }
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "←"
-                onClicked: stackView.pop()
-                contentItem: Text { text: "←"; color: "white"; font.pixelSize: 24; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-            }
-            Label { text: "Gestión de Materias"; color: "white"; font.bold: true; font.pixelSize: 18 }
-        }
-    }
+    header: PageHeader { title: "Gestión de Materias" }
 
     ColumnLayout {
         anchors.fill: parent
@@ -56,7 +46,7 @@ Page {
                 height: 60
                 color: "white"
                 radius: 8
-                border.color: "#ecf0f1"
+                border.color: Theme.border
 
                 RowLayout {
                     anchors.fill: parent
@@ -65,7 +55,7 @@ Page {
 
                     Rectangle {
                         width: 30; height: 30; radius: 15
-                        color: "#9b59b6"
+                        color: Theme.purple
                         Label { anchors.centerIn: parent; text: "📖"; }
                     }
 

@@ -1,10 +1,22 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Gestión de Asignaciones"
+    background: Rectangle { color: Theme.background }
+
+    header: PageHeader {
+        title: qsTr("Gestión de Asignaciones")
+        subtitle: qsTr("Relación profesor · materia · curso")
+        AppButton {
+            text: qsTr("+ Nueva asignación")
+            onClicked: createDialog.open()
+        }
+    }
 
     Component.onCompleted: {
         adminViewModel.loadAsignaciones()
@@ -19,21 +31,6 @@ Page {
         anchors.margins: 20
         spacing: 20
 
-        // Header
-        RowLayout {
-            Layout.fillWidth: true
-            Label {
-                text: "Asignaciones Profesor-Materia"
-                font.pixelSize: 24
-                font.bold: true
-                Layout.fillWidth: true
-            }
-            Button {
-                text: "+ Nueva Asignación"
-                highlighted: true
-                onClicked: createDialog.open()
-            }
-        }
 
         // List
         ListView {
@@ -49,7 +46,7 @@ Page {
                 height: 80
                 color: "white"
                 radius: 8
-                border.color: "#e0e0e0"
+                border.color: Theme.border
 
                 RowLayout {
                     anchors.fill: parent

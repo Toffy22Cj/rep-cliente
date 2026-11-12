@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
+import "../components"
 
 Page {
     id: root
@@ -11,23 +13,7 @@ Page {
     
     ListModel { id: studentsModel }
     
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "\u2190"
-                onClicked: stackView.pop()
-            }
-            Label {
-                text: "Estudiantes - " + (cursoNombre || "Curso " + cursoId)
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
-            }
-            Item { Layout.fillWidth: true }
-        }
-    }
+    header: PageHeader { title: "Estudiantes - " + (cursoNombre || "Curso " + cursoId) }
     
     ColumnLayout {
         anchors.fill: parent
@@ -37,7 +23,7 @@ Page {
         Label {
             text: studentsModel.count + " estudiantes registrados"
             font.pixelSize: 14
-            color: "#7f8c8d"
+            color: Theme.textSecondary
         }
         
         ListView {
@@ -54,7 +40,7 @@ Page {
                 background: Rectangle {
                     color: "white"
                     radius: 8
-                    border.color: "#ecf0f1"
+                    border.color: Theme.border
                 }
                 
                 contentItem: RowLayout {
@@ -65,7 +51,7 @@ Page {
                         width: 40
                         height: 40
                         radius: 20
-                        color: "#3498db"
+                        color: Theme.primary
                         Label {
                             anchors.centerIn: parent
                             text: model.nombre ? model.nombre.charAt(0).toUpperCase() : "E"
@@ -85,12 +71,12 @@ Page {
                         }
                         Label {
                             text: "ID: " + (model.identificacion || "N/A")
-                            color: "#7f8c8d"
+                            color: Theme.textSecondary
                             font.pixelSize: 12
                         }
                         Label {
                             text: model.correo || ""
-                            color: "#7f8c8d"
+                            color: Theme.textSecondary
                             font.pixelSize: 12
                         }
                     }
@@ -101,7 +87,7 @@ Page {
                 visible: studentsModel.count === 0
                 anchors.centerIn: parent
                 text: "No hay estudiantes registrados en este curso"
-                color: "#bdc3c7"
+                color: Theme.textMuted
                 font.pixelSize: 16
             }
         }

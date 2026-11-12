@@ -14,14 +14,12 @@ EstudianteViewModel::EstudianteViewModel(QObject *parent)
 
     connect(m_service, &EstudianteService::materiasFetched, this, [this](const QList<MateriaDTO> &materias) {
         m_materiaModel->setMaterias(materias);
-        m_isLoading = false;
-        emit isLoadingChanged();
+        endRequest();
     });
 
     connect(m_service, &EstudianteService::actividadesFetched, this, [this](const QList<ActividadDTO> &actividades) {
         m_actividadModel->setActividades(actividades);
-        m_isLoading = false;
-        emit isLoadingChanged();
+        endRequest();
     });
 
     connect(m_service, &EstudianteService::actividadConPreguntasFetched, this, [this](const ActividadConPreguntasDTO &act) {
@@ -29,36 +27,43 @@ EstudianteViewModel::EstudianteViewModel(QObject *parent)
         m_currentActivityTitle = act.titulo;
         m_currentActivityDescription = act.descripcion;
         m_preguntaModel->setQuestions(act.preguntas);
-        m_isLoading = false;
-        emit isLoadingChanged();
+        m_activityStartedAt = QDateTime::currentDateTime();
+        endRequest();
         emit currentActivityChanged();
         emit actividadConPreguntasFetched();
     });
 
     connect(m_service, &EstudianteService::actividadResuelta, this, [this](const ResultadoActividadDTO &resultado) {
-        m_isLoading = false;
-        emit isLoadingChanged();
+        endRequest();
         emit activitySubmitted(true, QString("Actividad enviada con éxito. Nota: %1").arg(resultado.nota));
     });
 
+    // HttpClient ya traduce el error (incluido el mensaje del servidor y la sesión expirada)
     connect(m_service, &EstudianteService::errorOccurred, this, [this](const QString &error) {
-        m_isLoading = false;
-        emit isLoadingChanged();
-        
-        QString friendlyError = error;
-        if (error.contains("status code 403")) {
-            friendlyError = "Acceso denegado: Es posible que ya hayas realizado esta actividad o no tengas permiso.";
-        } else if (error.contains("status code 401")) {
-            friendlyError = "Sesión expirada. Por favor, vuelve a iniciar sesión.";
-        }
-        
-        emit errorOccurred(friendlyError);
+        endRequest();
+        emit errorOccurred(error);
     });
+}
+
+/*
+ * Varias cargas pueden estar en curso a la vez (materias + actividades al abrir el
+ * dashboard). Antes un único booleano hacía que la segunda carga se descartara y las
+ * actividades no aparecían. Ahora se cuenta el número de peticiones pendientes.
+ */
+void EstudianteViewModel::beginRequest()
+{
+    if (m_pendingRequests++ == 0)
+        emit isLoadingChanged();
+}
+
+void EstudianteViewModel::endRequest()
+{
+    if (m_pendingRequests > 0 && --m_pendingRequests == 0)
+        emit isLoadingChanged();
 }
 
 void EstudianteViewModel::loadMaterias()
 {
-    if (m_isLoading) return;
     auto &session = SessionManager::instance();
     if (!session.isAuthenticated()) return;
 
@@ -68,14 +73,12 @@ void EstudianteViewModel::loadMaterias()
         return;
     }
 
-    m_isLoading = true;
-    emit isLoadingChanged();
+    beginRequest();
     m_service->fetchMaterias(session.userId(), session.token());
 }
 
 void EstudianteViewModel::loadActividades()
 {
-    if (m_isLoading) return;
     auto &session = SessionManager::instance();
     if (!session.isAuthenticated()) return;
 
@@ -84,47 +87,44 @@ void EstudianteViewModel::loadActividades()
         return;
     }
 
-    m_isLoading = true;
-    emit isLoadingChanged();
+    beginRequest();
     m_service->fetchActividades(session.userId(), session.token());
 }
 
 void EstudianteViewModel::loadActividadesByMateria(long long materiaId)
 {
-    if (m_isLoading) return;
     auto &session = SessionManager::instance();
     if (!session.isAuthenticated()) return;
 
-    m_isLoading = true;
-    emit isLoadingChanged();
+    beginRequest();
     m_service->fetchActividadesByMateria(session.userId(), materiaId, session.token());
 }
 
 void EstudianteViewModel::startActividad(long long actividadId)
 {
-    if (m_isLoading) return;
+    if (isLoading()) return; // evita abrir dos veces la misma actividad
     auto &session = SessionManager::instance();
     if (!session.isAuthenticated()) return;
 
-    m_isLoading = true;
-    emit isLoadingChanged();
+    beginRequest();
     m_service->fetchActividadConPreguntas(actividadId, session.token());
 }
 
 void EstudianteViewModel::submitActividad()
 {
-    if (m_isLoading) return;
+    if (isLoading()) return; // evita envíos duplicados
     auto &session = SessionManager::instance();
     if (!session.isAuthenticated()) return;
 
-    m_isLoading = true;
-    emit isLoadingChanged();
+    beginRequest();
 
     ActividadResueltaDTO request;
     request.actividadId = m_currentActivityId;
     request.estudianteId = session.userId();
     request.fechaEntrega = QDateTime::currentDateTime();
-    request.duracionMinutos = 10; // TODO: Calcular duración real
+    request.duracionMinutos = m_activityStartedAt.isValid()
+        ? qMax<qint64>(1, m_activityStartedAt.secsTo(request.fechaEntrega) / 60)
+        : 0;
 
     for (const auto &p : m_preguntaModel->questions()) {
         RespuestaPreguntaDTO resp;

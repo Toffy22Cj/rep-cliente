@@ -1,119 +1,100 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import Rep
+import "../components"
 
 Page {
     id: root
-    background: Rectangle { color: "#f4f6f9" }
     property var stackView: StackView.view
+    background: Rectangle { color: Theme.background }
 
-    Component.onCompleted: {
-        console.log("Admin Dashboard Loaded")
+    header: PageHeader {
+        title: qsTr("Panel de administración")
+        subtitle: qsTr("Gestione usuarios, cursos, materias y asignaciones")
+        showBack: false
     }
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            spacing: 15
-            ToolButton {
-                text: "Cerrar Sesión"
-                icon.source: "" // Clear icon if default exists
-                font.bold: true
-                onClicked: sessionManager.clear()
-                contentItem: Text {
-                    text: "Cerrar Sesión"
-                    color: "white"
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                background: Rectangle {
-                    color: parent.down ? "#c0392b" : "transparent"
-                    radius: 4
-                }
-            }
+    readonly property var modules: [
+        { title: qsTr("Usuarios"), description: qsTr("Altas, edición, roles y estado de las cuentas"), icon: "👥", page: "UserManagementPage.qml", tint: Theme.primary },
+        { title: qsTr("Cursos"), description: qsTr("Grados y grupos del colegio"), icon: "🏫", page: "CourseManagementPage.qml", tint: Theme.warning },
+        { title: qsTr("Materias"), description: qsTr("Catálogo de asignaturas"), icon: "📖", page: "SubjectManagementPage.qml", tint: Theme.purple },
+        { title: qsTr("Asignaciones"), description: qsTr("Profesor · materia · curso"), icon: "🔗", page: "AssignmentsManagementPage.qml", tint: Theme.teal }
+    ]
+
+    ScrollView {
+        anchors.fill: parent
+        contentWidth: availableWidth
+
+        ColumnLayout {
+            width: Math.min(parent.width - 2 * Theme.spacingXl, Theme.maxContentWidth)
+            x: (parent.width - width) / 2
+            spacing: Theme.spacingL
+
+            Item { Layout.preferredHeight: Theme.spacingS }
+
             Label {
-                text: "Panel de Administrador"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
+                text: qsTr("Hola, %1").arg(sessionManager.userName)
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontHeadline
+                font.weight: Font.Bold
             }
-            Item { Layout.fillWidth: true }
-            Label {
-                text: sessionManager.userName
-                color: "#ecf0f1"
-            }
-        }
-    }
 
-    GridLayout {
-        anchors.centerIn: parent
-        columns: 2
-        rowSpacing: 20
-        columnSpacing: 20
-        width: Math.min(parent.width - 40, 800)
-
-        // Management Cards
-        Repeater {
-            model: [
-                { title: "Usuarios", icon: "👥", page: "UserManagementPage.qml", color: "#3498db" },
-                { title: "Cursos", icon: "📚", page: "CourseManagementPage.qml", color: "#e67e22" },
-                { title: "Materias", icon: "📖", page: "SubjectManagementPage.qml", color: "#9b59b6" },
-                { title: "Asignaciones", icon: "🔗", page: "AssignmentsManagementPage.qml", color: "#16a085" },
-                { title: "Configuración", icon: "⚙️", page: "", color: "#7f8c8d" }
-            ]
-
-            delegate: Rectangle {
-                id: card
+            GridLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 150
-                radius: 12
-                color: "white"
-                
-                border.color: "#ecf0f1"
-                border.width: 1
+                columns: root.width > 1100 ? 4 : (root.width > 700 ? 2 : 1)
+                rowSpacing: Theme.spacingM
+                columnSpacing: Theme.spacingM
 
-                // Hover effect
-                scale: mouseArea.containsMouse ? 1.02 : 1.0
-                Behavior on scale { NumberAnimation { duration: 200 } }
-                
-                // Color change on hover not strictly needed if we have scale, but can add if desired
-                // color: mouseArea.containsMouse ? "#fdfdfd" : "white"
+                Repeater {
+                    model: root.modules
+                    delegate: Card {
+                        id: card
+                        required property var modelData
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 200
+                        hoverable: true
 
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 15
-                    
-                    Rectangle {
-                        Layout.alignment: Qt.AlignHCenter
-                        width: 60; height: 60; radius: 30
-                        color: modelData.color
-                        Label {
-                            anchors.centerIn: parent
-                            text: modelData.icon
-                            font.pixelSize: 30
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: Theme.spacingS
+
+                            Rectangle {
+                                width: 48; height: 48; radius: Theme.radiusM
+                                color: Qt.rgba(card.modelData.tint.r, card.modelData.tint.g, card.modelData.tint.b, 0.12)
+                                Label {
+                                    anchors.centerIn: parent
+                                    text: card.modelData.icon
+                                    font.pixelSize: 24
+                                }
+                            }
+                            Label {
+                                text: card.modelData.title
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSubtitle
+                                font.weight: Font.DemiBold
+                                Layout.topMargin: Theme.spacingXs
+                            }
+                            Label {
+                                text: card.modelData.description
+                                color: Theme.textSecondary
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+                            Item { Layout.fillHeight: true }
+                            Label {
+                                text: qsTr("Abrir →")
+                                color: card.modelData.tint
+                                font.weight: Font.DemiBold
+                            }
                         }
-                    }
-                    
-                    Label {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: modelData.title
-                        font.bold: true
-                        font.pixelSize: 18
-                        color: "#2c3e50"
-                    }
-                }
 
-                MouseArea {
-                    id: mouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (modelData.page !== "") {
-                            stackView.push(modelData.page)
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            Accessible.role: Accessible.Button
+                            Accessible.name: card.modelData.title
+                            onClicked: root.stackView.push(card.modelData.page)
                         }
                     }
                 }

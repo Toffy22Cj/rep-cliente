@@ -1,4 +1,5 @@
 #include "AdminService.h"
+#include "HttpClient.h"
 #include "ApiConfig.h"
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -14,12 +15,7 @@ AdminService::AdminService(QObject *parent)
 
 QNetworkRequest AdminService::createRequest(const QUrl &url, const QString &token)
 {
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    if (!token.isEmpty()) {
-        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
-    }
-    return request;
+    return HttpClient::jsonRequest(url, token);
 }
 
 // --- Usuarios ---
@@ -31,7 +27,7 @@ void AdminService::fetchUsuarios(const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -67,7 +63,7 @@ void AdminService::updateUsuario(const UsuarioDTO &usuario, const QString &token
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Usuario actualizado correctamente");
@@ -81,7 +77,7 @@ void AdminService::deleteUsuario(long long id, const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Usuario eliminado");
@@ -95,7 +91,7 @@ void AdminService::toggleUsuarioEstado(long long id, bool activo, const QString 
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Estado de usuario actualizado");
@@ -111,7 +107,7 @@ void AdminService::fetchCursos(const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -140,7 +136,7 @@ void AdminService::createCurso(const CursoAdminDTO &curso, const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Curso creado");
@@ -158,7 +154,7 @@ void AdminService::updateCurso(const CursoAdminDTO &curso, const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Curso actualizado");
@@ -172,7 +168,7 @@ void AdminService::deleteCurso(long long id, const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Curso eliminado");
@@ -188,7 +184,7 @@ void AdminService::fetchMaterias(const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -215,7 +211,7 @@ void AdminService::createMateria(const MateriaAdminDTO &materia, const QString &
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Materia creada");
@@ -232,7 +228,7 @@ void AdminService::updateMateria(const MateriaAdminDTO &materia, const QString &
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Materia actualizada");
@@ -246,7 +242,7 @@ void AdminService::deleteMateria(long long id, const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Materia eliminada");
@@ -264,7 +260,7 @@ void AdminService::fetchAsignaciones(const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -324,7 +320,7 @@ void AdminService::createAsignacion(long long profesorId, long long materiaId, l
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Asignación creada correctamente");
@@ -339,7 +335,7 @@ void AdminService::deleteAsignacion(long long id, const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit operationSuccess("Asignación eliminada");

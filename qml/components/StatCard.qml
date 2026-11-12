@@ -1,70 +1,52 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
 
-
-Item {
+// Tarjeta de indicador (KPI): icono, valor y descripción.
+Card {
     id: root
-    
-    // Properties
     property string title: "Title"
     property string value: "0"
     property string icon: "📊"
-    property color color: "#3498db"
-    property color iconBackground: Qt.lighter(color, 1.4)
-    
+    property color color: Theme.primary
+    property color iconBackground: Qt.rgba(color.r, color.g, color.b, 0.12)
+
     Layout.fillWidth: true
-    Layout.preferredHeight: 120
-    
-    // Main Card Background
-    Rectangle {
-        id: cardBg
+    Layout.preferredHeight: 112
+    padding: Theme.spacingM + Theme.spacingXs
+
+    RowLayout {
         anchors.fill: parent
-        radius: 12
-        color: "white"
-        
-        border.color: "#ecf0f1"
-        border.width: 1
-        
-        // Content
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 20
-            spacing: 15
-            
-            // Icon Container
-            Rectangle {
-                Layout.preferredWidth: 60
-                Layout.preferredHeight: 60
-                radius: 12
-                color: root.iconBackground
-                
-                Label {
-                    anchors.centerIn: parent
-                    text: root.icon
-                    font.pixelSize: 28
-                }
+        spacing: Theme.spacingM
+
+        Rectangle {
+            Layout.preferredWidth: 52
+            Layout.preferredHeight: 52
+            radius: Theme.radiusM
+            color: root.iconBackground
+            Label {
+                anchors.centerIn: parent
+                text: root.icon
+                font.pixelSize: 24
             }
-            
-            // Text Content
-            ColumnLayout {
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
+            Label {
+                text: root.value
+                font.pixelSize: Theme.fontHeadline
+                font.weight: Font.Bold
+                color: Theme.textPrimary
+            }
+            Label {
+                text: root.title
+                font.pixelSize: Theme.fontBody
+                color: Theme.textSecondary
+                wrapMode: Text.WordWrap
                 Layout.fillWidth: true
-                spacing: 5
-                
-                Label {
-                    text: root.value
-                    font.pixelSize: 28
-                    font.bold: true
-                    color: "#2c3e50"
-                }
-                
-                Label {
-                    text: root.title
-                    font.pixelSize: 14
-                    color: "#7f8c8d"
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
             }
         }
     }

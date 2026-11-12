@@ -1,28 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Control de Asistencia"
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "\u2190"
-                onClicked: stackView.pop()
-            }
-            Label {
-                text: "Control de Asistencia"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
-            }
-            Item { Layout.fillWidth: true }
-        }
-    }
+    header: PageHeader { title: "Control de Asistencia" }
 
     // Local model to track attendance changes before saving
     ListModel { id: localAttendanceModel }
@@ -45,7 +31,7 @@ Page {
                 onActivated: updateData()
                 onCountChanged: {
                     if (count > 0 && currentIndex === -1) currentIndex = 0
-                    console.log("CursoCombo count:", count)
+                    root.tryAutoLoad()
                 }
             }
 
@@ -58,11 +44,7 @@ Page {
                 onActivated: updateData()
                 onCountChanged: {
                     if (count > 0 && currentIndex === -1) currentIndex = 0
-                    console.log("MateriaCombo count:", count)
-                    // Auto-load when both combos are ready
-                    if (count > 0 && cursoCombo.count > 0 && currentIndex >= 0 && cursoCombo.currentIndex >= 0) {
-                        updateData()
-                    }
+                    root.tryAutoLoad()
                 }
             }
 
@@ -70,7 +52,8 @@ Page {
             TextField {
                 id: fechaField
                 Layout.fillWidth: true
-                text: new Date().toISOString().split('T')[0]
+                // Fecha local (toISOString usaba UTC y por la noche proponía el día siguiente)
+                text: Qt.formatDate(new Date(), "yyyy-MM-dd")
                 placeholderText: "YYYY-MM-DD"
                 onEditingFinished: updateData()
             }
@@ -79,7 +62,7 @@ Page {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#ecf0f1"
+            color: Theme.border
         }
 
         ListView {
@@ -94,9 +77,9 @@ Page {
                 width: studentList.width
                 height: 120
                 background: Rectangle {
-                    color: index % 2 === 0 ? "#f9f9f9" : "white"
+                    color: index % 2 === 0 ? Theme.surfaceAlt : "white"
                     radius: 4
-                    border.color: "#dfe6e9"
+                    border.color: Theme.border
                     border.width: 1
                 }
 
@@ -115,7 +98,7 @@ Page {
                         Layout.columnSpan: 2
                         font.bold: true
                         font.pixelSize: 15
-                        color: "#2c3e50"
+                        color: Theme.textPrimary
                     }
                     
                     // Estado
@@ -227,9 +210,21 @@ Page {
         }
     }
 
+    // Carga automática en cuanto ambos combos tienen selección. Antes solo se
+    // disparaba si los modelos cambiaban con la página abierta, y como el dashboard
+    // ya los había cargado, al entrar no se mostraba ningún estudiante.
+    property bool autoLoaded: false
+    function tryAutoLoad() {
+        if (!autoLoaded && cursoCombo.count > 0 && materiaCombo.count > 0) {
+            if (cursoCombo.currentIndex < 0) cursoCombo.currentIndex = 0
+            if (materiaCombo.currentIndex < 0) materiaCombo.currentIndex = 0
+            autoLoaded = true
+            updateData()
+        }
+    }
+
     function updateData() {
         if (cursoCombo.currentIndex < 0 || materiaCombo.currentIndex < 0) {
-            console.log("AttendancePage: Combos not ready:", cursoCombo.currentIndex, materiaCombo.currentIndex)
             return;
         }
         
@@ -237,8 +232,6 @@ Page {
         
         var cursoObj = profesorViewModel.cursoModel.get(cursoCombo.currentIndex)
         var materiaObj = profesorViewModel.materiaModel.get(materiaCombo.currentIndex)
-        
-        console.log("AttendancePage: Loading asistencia for curso:", cursoObj.id, "materia:", materiaObj.id, "fecha:", fechaField.text)
         
         profesorViewModel.loadAsistencia(
             cursoObj.id,
@@ -289,5 +282,6 @@ Page {
     Component.onCompleted: {
         profesorViewModel.loadCursos()
         profesorViewModel.loadMaterias()
+        Qt.callLater(tryAutoLoad)
     }
 }

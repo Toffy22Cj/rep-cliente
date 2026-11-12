@@ -1,28 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Mis Cursos"
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "\u2190"
-                onClicked: stackView.pop()
-            }
-            Label {
-                text: "Mis Cursos"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
-            }
-            Item { Layout.fillWidth: true }
-        }
-    }
+    header: PageHeader { title: "Mis Cursos" }
 
     ListView {
         id: courseList
@@ -38,7 +24,7 @@ Page {
             background: Rectangle {
                 color: "white"
                 radius: 8
-                border.color: "#ecf0f1"
+                border.color: Theme.border
                 border.width: 1
             }
 
@@ -50,7 +36,7 @@ Page {
                     width: 50
                     height: 50
                     radius: 25
-                    color: "#3498db"
+                    color: Theme.primary
                     Label {
                         anchors.centerIn: parent
                         text: model.grado
@@ -69,7 +55,7 @@ Page {
                     }
                     Label {
                         text: "Grupo: " + model.grupo
-                        color: "#7f8c8d"
+                        color: Theme.textSecondary
                     }
                 }
                 

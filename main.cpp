@@ -1,8 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QLoggingCategory>
-#include <QDebug>
+#include <QQuickStyle>
+
 #include "viewmodels/LoginViewModel.h"
 #include "viewmodels/EstudianteViewModel.h"
 #include "viewmodels/ProfesorViewModel.h"
@@ -12,80 +12,50 @@
 #include "core/SessionManager.h"
 #include "core/security/SecureTokenStorage.h"
 #include "core/security/QtKeychainCredentialStore.h"
-#include "models/Enums.h"
 
 int main(int argc, char *argv[])
 {
-    QLoggingCategory::setFilterRules(
-        "qt.qml.binding.removal.info=true\n"
-        "qt.qml.engine.debug=true\n"
-        "qt.qml.imports=true\n"
-    );
-
-    qDebug() << "=== APP INICIANDO ===";
-    
     QGuiApplication app(argc, argv);
-    qDebug() << "✓ QGuiApplication creado";
+    // Necesarios para que QSettings use una ubicación estable (perfil de sesión, URL de API)
+    QGuiApplication::setOrganizationName(QStringLiteral("REP"));
+    QGuiApplication::setOrganizationDomain(QStringLiteral("rep.local"));
+    QGuiApplication::setApplicationName(QStringLiteral("REP Cliente"));
+    QGuiApplication::setApplicationVersion(QStringLiteral(PROJECT_VERSION_STRING));
 
-    // Setup Secure Storage
-    auto keychainStore = std::make_unique<Rep::Security::QtKeychainCredentialStore>();
-    Rep::SecureTokenStorage::instance().setBackend(std::move(keychainStore));
-    qDebug() << "✓ SecureTokenStorage configurado";
+    // Estilo base sobre el que se aplica el tema propio (qml/theme/Theme.qml)
+    QQuickStyle::setStyle(QStringLiteral("Basic"));
+
+    // El token JWT se guarda en el llavero del sistema operativo
+    Rep::SecureTokenStorage::instance().setBackend(
+        std::make_unique<Rep::Security::QtKeychainCredentialStore>());
 
     Rep::SessionManager &sessionManager = Rep::SessionManager::instance();
-    qDebug() << "✓ SessionManager creado";
-    
     Rep::LoginViewModel loginViewModel;
-    qDebug() << "✓ LoginViewModel creado";
-    
     Rep::EstudianteViewModel estudianteViewModel;
-    qDebug() << "✓ EstudianteViewModel creado";
-    
     Rep::ProfesorViewModel profesorViewModel;
-    qDebug() << "✓ ProfesorViewModel creado";
-
     Rep::ReportsViewModel reportsViewModel;
-    qDebug() << "✓ ReportsViewModel creado";
-
     Rep::AdminViewModel adminViewModel;
-    qDebug() << "✓ AdminViewModel creado";
 
     QQmlApplicationEngine engine;
-    qDebug() << "✓ QQmlApplicationEngine creado";
-    
-    // Register types
     qmlRegisterType<Rep::PreguntaModel>("Rep", 1, 0, "PreguntaModel");
     qRegisterMetaType<Rep::ActividadConPreguntasDTO>("ActividadConPreguntasDTO");
-    qDebug() << "✓ Tipos registrados";
 
-    engine.rootContext()->setContextProperty("sessionManager", &sessionManager);
-    engine.rootContext()->setContextProperty("loginViewModel", &loginViewModel);
-    engine.rootContext()->setContextProperty("estudianteViewModel", &estudianteViewModel);
-    engine.rootContext()->setContextProperty("profesorViewModel", &profesorViewModel);
-    engine.rootContext()->setContextProperty("reportsViewModel", &reportsViewModel);
-    engine.rootContext()->setContextProperty("adminViewModel", &adminViewModel);
-    qDebug() << "✓ Context properties configuradas";
+    QQmlContext *context = engine.rootContext();
+    context->setContextProperty("sessionManager", &sessionManager);
+    context->setContextProperty("loginViewModel", &loginViewModel);
+    context->setContextProperty("estudianteViewModel", &estudianteViewModel);
+    context->setContextProperty("profesorViewModel", &profesorViewModel);
+    context->setContextProperty("reportsViewModel", &reportsViewModel);
+    context->setContextProperty("adminViewModel", &adminViewModel);
 
     QObject::connect(
-        &engine,
-        &QQmlApplicationEngine::objectCreationFailed,
-        &app,
-        []() { 
-            qDebug() << "❌ ERROR: objectCreationFailed";
-            QCoreApplication::exit(-1); 
-        },
-        Qt::QueuedConnection
-    );
+        &engine, &QQmlApplicationEngine::objectCreationFailed,
+        &app, []() { QCoreApplication::exit(-1); },
+        Qt::QueuedConnection);
 
-    qDebug() << "⏳ ANTES de cargar QML";
     engine.loadFromModule("Rep", "Main");
-    qDebug() << "✓ DESPUÉS de cargar QML";
-
-    if (engine.rootObjects().isEmpty()) {
-        qDebug() << "❌ ERROR: No se crearon objetos root";
+    if (engine.rootObjects().isEmpty())
         return -1;
-    }
-    
-    qDebug() << "✓ App iniciada correctamente";
+
     return app.exec();
 }

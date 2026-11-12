@@ -1,27 +1,34 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Rep VERSION 0.1 LANGUAGES CXX)
+project(Rep VERSION 0.2 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Network)
-
-list(APPEND CMAKE_PREFIX_PATH "/usr/lib/x86_64-linux-gnu/cmake")
+find_package(Qt6 6.8 REQUIRED COMPONENTS Quick QuickControls2 Network)
+# QtKeychain: almacenamiento seguro del token en el llavero del sistema.
+# Si está instalado fuera de las rutas estándar, use -DCMAKE_PREFIX_PATH=<ruta>.
 find_package(Qt6Keychain REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
 set(HEADERS
     api/ApiConfig.h
+    api/HttpClient.h
     api/AuthService.h
     api/EstudianteService.h
     api/ProfesorService.h
+    api/AdminService.h
     core/SessionManager.h
+    core/security/ICredentialStore.h
+    core/security/SecureTokenStorage.h
+    core/security/QtKeychainCredentialStore.h
     models/Enums.h
     models/Usuario.h
     models/Profesor.h
     models/Estudiante.h
     models/AuthDTOs.h
+    models/AdminDTOs.h
     models/StudentDTOs.h
     models/ProfesorDTOs.h
     models/MateriaModel.h
@@ -31,41 +38,48 @@ set(HEADERS
     viewmodels/LoginViewModel.h
     viewmodels/EstudianteViewModel.h
     viewmodels/ProfesorViewModel.h
-
-    viewmodels/ProfesorViewModel.h
     viewmodels/ReportsViewModel.h
     viewmodels/AdminViewModel.h
-    api/AdminService.h
-    core/security/ICredentialStore.h
-    core/security/SecureTokenStorage.h
-    core/security/QtKeychainCredentialStore.h
 )
 
 set(SOURCES
     main.cpp
+    api/HttpClient.cpp
     api/AuthService.cpp
     api/EstudianteService.cpp
     api/ProfesorService.cpp
+    api/AdminService.cpp
+    core/security/SecureTokenStorage.cpp
+    core/security/QtKeychainCredentialStore.cpp
     models/PreguntaModel.cpp
     viewmodels/LoginViewModel.cpp
     viewmodels/EstudianteViewModel.cpp
     viewmodels/ProfesorViewModel.cpp
-
-    viewmodels/ProfesorViewModel.cpp
     viewmodels/ReportsViewModel.cpp
     viewmodels/AdminViewModel.cpp
-    api/AdminService.cpp
-    core/security/SecureTokenStorage.cpp
-    core/security/QtKeychainCredentialStore.cpp
 )
 
-qt_add_executable(appRep
-    ${HEADERS}
-    ${SOURCES}
-)
+qt_add_executable(appRep ${HEADERS} ${SOURCES})
+
+target_compile_definitions(appRep PRIVATE PROJECT_VERSION_STRING="${PROJECT_VERSION}")
+
+# Tokens de diseño accesibles con "import Rep" como singleton Theme
+set_source_files_properties(qml/theme/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 set(QML_FILES
     qml/Main.qml
+    qml/theme/Theme.qml
+    qml/components/AppButton.qml
+    qml/components/AppTabButton.qml
+    qml/components/AppTextField.qml
+    qml/components/Avatar.qml
+    qml/components/Badge.qml
+    qml/components/Card.qml
+    qml/components/DatePicker.qml
+    qml/components/EmptyState.qml
+    qml/components/PageHeader.qml
+    qml/components/StatCard.qml
+    qml/components/UserChip.qml
     qml/pages/LoginPage.qml
     qml/pages/StudentDashboard.qml
     qml/pages/ActivityResolutionPage.qml
@@ -74,7 +88,6 @@ set(QML_FILES
     qml/pages/AttendancePage.qml
     qml/pages/QuestionEditorPage.qml
     qml/pages/GradingPage.qml
-    qml/components/StatCard.qml
     qml/pages/CoursesPage.qml
     qml/pages/StudentsPage.qml
     qml/pages/ReportsPage.qml
@@ -83,13 +96,12 @@ set(QML_FILES
     qml/pages/CourseManagementPage.qml
     qml/pages/SubjectManagementPage.qml
     qml/pages/AssignmentsManagementPage.qml
-    qml/components/DatePicker.qml
 )
 
 qt_add_qml_module(appRep
     URI Rep
-    QML_FILES
-        ${QML_FILES}
+    VERSION 1.0
+    QML_FILES ${QML_FILES}
 )
 
 set_target_properties(appRep PROPERTIES
@@ -100,7 +112,7 @@ set_target_properties(appRep PROPERTIES
 )
 
 target_link_libraries(appRep
-    PRIVATE Qt6::Quick Qt6::Network qt6keychain
+    PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::Network qt6keychain
 )
 
 include(GNUInstallDirs)

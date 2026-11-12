@@ -1,4 +1,6 @@
 #include "EstudianteService.h"
+#include "HttpClient.h"
+#include "ApiConfig.h"
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -14,23 +16,18 @@ EstudianteService::EstudianteService(QObject *parent)
 
 QNetworkRequest EstudianteService::createRequest(const QUrl &url, const QString &token)
 {
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    if (!token.isEmpty()) {
-        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
-    }
-    return request;
+    return HttpClient::jsonRequest(url, token);
 }
 
 void EstudianteService::fetchMaterias(long long estudianteId, const QString &token)
 {
-    QUrl url(QString("http://localhost:8080/api/estudiante/%1/materias").arg(estudianteId));
+    QUrl url(ApiConfig::url(QString("/estudiante/%1/materias")).arg(estudianteId));
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << "Fetch Materias Error:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -46,13 +43,13 @@ void EstudianteService::fetchMaterias(long long estudianteId, const QString &tok
 
 void EstudianteService::fetchActividades(long long estudianteId, const QString &token)
 {
-    QUrl url(QString("http://localhost:8080/api/estudiante/%1/actividades").arg(estudianteId));
+    QUrl url(ApiConfig::url(QString("/estudiante/%1/actividades")).arg(estudianteId));
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << "Fetch Actividades Error:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -78,13 +75,13 @@ void EstudianteService::fetchActividades(long long estudianteId, const QString &
 
 void EstudianteService::fetchActividadesByMateria(long long estudianteId, long long materiaId, const QString &token)
 {
-    QUrl url(QString("http://localhost:8080/api/estudiante/%1/materias/%2/actividades").arg(estudianteId).arg(materiaId));
+    QUrl url(ApiConfig::url(QString("/estudiante/%1/materias/%2/actividades")).arg(estudianteId).arg(materiaId));
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << "Fetch ActividadesByMateria Error:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -110,7 +107,7 @@ void EstudianteService::fetchActividadesByMateria(long long estudianteId, long l
 
 void EstudianteService::fetchActividadConPreguntas(long long actividadId, const QString &token)
 {
-    QUrl url(QString("http://localhost:8080/api/actividades/%1/preguntas").arg(actividadId));
+    QUrl url(ApiConfig::url(QString("/actividades/%1/preguntas")).arg(actividadId));
     QNetworkRequest request = createRequest(url, token);
     
     QNetworkReply *reply = m_networkManager->get(request);
@@ -118,7 +115,7 @@ void EstudianteService::fetchActividadConPreguntas(long long actividadId, const 
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << "Fetch Activity Questions Error [" << actividadId << "]:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -162,7 +159,7 @@ void EstudianteService::fetchActividadConPreguntas(long long actividadId, const 
 
 void EstudianteService::resolverActividad(long long estudianteId, long long actividadId, const ActividadResueltaDTO &request, const QString &token)
 {
-    QUrl url(QString("http://localhost:8080/api/estudiante/%1/actividades/%2/resolver").arg(estudianteId).arg(actividadId));
+    QUrl url(ApiConfig::url(QString("/estudiante/%1/actividades/%2/resolver")).arg(estudianteId).arg(actividadId));
     
     QJsonObject root;
     root["actividadId"] = request.actividadId;
@@ -185,7 +182,7 @@ void EstudianteService::resolverActividad(long long estudianteId, long long acti
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << "Submit Activity Error [" << actividadId << "]:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 

@@ -1,4 +1,5 @@
 #include "ProfesorService.h"
+#include "HttpClient.h"
 #include "ApiConfig.h"
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -14,12 +15,7 @@ ProfesorService::ProfesorService(QObject *parent)
 
 QNetworkRequest ProfesorService::createRequest(const QUrl &url, const QString &token)
 {
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    if (!token.isEmpty()) {
-        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
-    }
-    return request;
+    return HttpClient::jsonRequest(url, token);
 }
 
 void ProfesorService::fetchDashboardData(const QString &token)
@@ -29,7 +25,7 @@ void ProfesorService::fetchDashboardData(const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -60,7 +56,7 @@ void ProfesorService::fetchMateriasAsignadas(const QString &token)
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << "Error fetching materias:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -89,7 +85,7 @@ void ProfesorService::fetchCursos(const QString &token)
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << "Error fetching cursos:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -121,7 +117,7 @@ void ProfesorService::fetchActividades(long long materiaId, long long cursoId, c
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -155,7 +151,7 @@ void ProfesorService::fetchRespuestas(long long actividadId, const QString &toke
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -183,7 +179,7 @@ void ProfesorService::calificarRespuesta(long long respuestaId, float nota, cons
     connect(reply, &QNetworkReply::finished, this, [this, reply, respuestaId, nota]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit respuestaCalificada(respuestaId, nota);
@@ -199,7 +195,7 @@ void ProfesorService::fetchEstudiantes(long long cursoId, const QString &token)
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
             qDebug() << "Error fetching estudiantes:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -232,7 +228,7 @@ void ProfesorService::fetchAsistencia(long long cursoId, long long materiaId, co
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -272,7 +268,7 @@ void ProfesorService::saveAsistencia(long long cursoId, long long materiaId, con
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             emit asistenciaSaved(false);
             return;
         }
@@ -296,7 +292,7 @@ void ProfesorService::crearActividad(const ActividadCreateDTO &actividat, const 
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         QJsonObject res = QJsonDocument::fromJson(reply->readAll()).object();
@@ -320,7 +316,7 @@ void ProfesorService::actualizarActividad(long long id, const ActividadCreateDTO
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             emit actividadActualizada(false);
             return;
         }
@@ -349,7 +345,7 @@ void ProfesorService::crearPregunta(const PreguntaRequestDTO &pregunta, const QS
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         QJsonObject res = QJsonDocument::fromJson(reply->readAll()).object();
@@ -366,7 +362,7 @@ void Rep::ProfesorService::fetchPromedios(long long cursoId, long long materiaId
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -413,7 +409,7 @@ void Rep::ProfesorService::fetchEntregas(long long actividadId, const QString &t
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -478,7 +474,7 @@ void Rep::ProfesorService::fetchEstadisticasActividad(long long actividadId, con
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -501,7 +497,7 @@ void Rep::ProfesorService::exportPromedios(long long cursoId, long long materiaI
     connect(reply, &QNetworkReply::finished, this, [this, reply, cursoId, materiaId]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 

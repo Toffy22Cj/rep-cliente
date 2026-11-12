@@ -1,0 +1,56 @@
+# Changelog — REP Cliente (Qt 6 / QML)
+
+## [0.2.0] — 2026-11-12 · Refactorización, corrección de errores y rediseño
+
+### Seguridad
+- El JWT ya no se escribe en el log (antes se volcaba la respuesta completa del login).
+- Cierre automático de sesión cuando el servidor responde 401 a una petición autenticada
+  (token caducado o cuenta desactivada).
+- La validez de la sesión se calcula a partir de la claim `exp` del propio JWT.
+
+### Errores corregidos
+- **Actividades del estudiante no se cargaban** al abrir el dashboard: un único indicador
+  `isLoading` hacía que la segunda carga (actividades) se descartara tras iniciar la de
+  materias. Ahora se cuentan las peticiones pendientes.
+- **Sesión restaurada rota**: al reiniciar se recuperaba el token pero no el usuario
+  (id sin inicializar, rol por defecto). Se persiste el perfil básico (no sensible).
+- **Login correcto que volvía al login** si el llavero del sistema no estaba disponible
+  (la expiración solo se guardaba si el llavero funcionaba).
+- **Asistencia vacía al entrar**: la carga solo se disparaba si los combos cambiaban con
+  la página abierta. Además la fecha por defecto usaba UTC (por la noche proponía el día
+  siguiente en Colombia).
+- **Asignaciones sin botón Volver** (el usuario quedaba atrapado en la pantalla).
+- **Temporizador falso** "Tiempo: 10:00" en la resolución de actividades (eliminado).
+- Duración enviada al entregar una actividad: antes fija en 10 min, ahora la real.
+- Dashboard del profesor ocupaba solo ~600 px por un bucle de layout.
+- Mensajes de error genéricos de Qt sustituidos por el mensaje del servidor o un texto
+  claro por código HTTP (sin conexión, 403, 404, 409, 429, 5xx…).
+
+### Arquitectura
+- `api/HttpClient`: construcción de peticiones y tratamiento de errores compartidos por
+  todos los servicios (antes duplicado en cada uno).
+- `api/ApiConfig`: URL configurable con `REP_API_URL` o `QSettings` (`api/baseUrl`);
+  se eliminaron las URLs `http://localhost:8080` fijas de `EstudianteService`.
+- `SessionManager`: conversión de roles centralizada, perfil persistido, iniciales.
+- `main.cpp`: sin reglas de logging de depuración; nombre de organización/aplicación
+  para `QSettings`.
+- `CMakeLists.txt`: sin entradas duplicadas ni rutas del sistema fijas.
+
+### Rediseño de la interfaz
+- **Sistema de diseño** `qml/theme/Theme.qml` (singleton, `import Rep`): colores,
+  tipografía, espaciado, radios y animaciones. Ninguna página usa ya colores
+  hexadecimales directamente.
+- **Componentes reutilizables** en `qml/components/`: `PageHeader`, `UserChip`,
+  `Avatar`, `Card`, `AppButton` (primary/secondary/danger/ghost), `AppTextField`,
+  `AppTabButton`, `Badge`, `EmptyState`, `StatCard`.
+- Paleta global aplicada a todos los controles estándar.
+- Nuevos: pantalla de login a dos columnas, dashboards de administrador y estudiante
+  (filtro por materia, tarjetas de actividad, estado vacío), cabecera unificada con
+  menú de usuario en todas las páginas, transiciones entre pantallas, búsqueda de
+  usuarios funcional.
+- Eliminada la tarjeta "Configuración" del panel de administración, que no tenía
+  ninguna pantalla asociada.
+
+### Verificación
+- Compilación completa (C++ y QML) y recorrido automático de todas las pantallas con
+  los tres roles contra el backend real (H2): sin errores ni advertencias de QML.
