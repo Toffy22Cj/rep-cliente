@@ -1,5 +1,6 @@
 #include "EstudianteService.h"
 #include "HttpClient.h"
+#include "../core/Sincronizacion.h"
 #include "ApiConfig.h"
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -10,7 +11,7 @@
 namespace Rep {
 
 EstudianteService::EstudianteService(QObject *parent)
-    : QObject(parent), m_networkManager(new QNetworkAccessManager(this))
+    : QObject(parent), m_networkManager(HttpClient::red())
 {
 }
 
@@ -25,14 +26,14 @@ void EstudianteService::fetchMaterias(long long estudianteId, const QString &tok
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
-            qCDebug(lcApi) << "Fetch Materias Error:" << reply->errorString();
+        QByteArray cuerpo;
+        if (!HttpClient::leerConRespaldo(reply, cuerpo)) {
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QList<MateriaDTO> materias;
-        QJsonArray array = QJsonDocument::fromJson(reply->readAll()).array();
+        QJsonArray array = QJsonDocument::fromJson(cuerpo).array();
         for (const QJsonValue &val : array) {
             QJsonObject obj = val.toObject();
             materias.append({obj["id"].toVariant().toLongLong(), obj["nombre"].toString()});
@@ -47,14 +48,14 @@ void EstudianteService::fetchActividades(long long estudianteId, const QString &
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
-            qCDebug(lcApi) << "Fetch Actividades Error:" << reply->errorString();
+        QByteArray cuerpo;
+        if (!HttpClient::leerConRespaldo(reply, cuerpo)) {
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QList<ActividadDTO> actividades;
-        QJsonArray array = QJsonDocument::fromJson(reply->readAll()).array();
+        QJsonArray array = QJsonDocument::fromJson(cuerpo).array();
         for (const QJsonValue &val : array) {
             QJsonObject obj = val.toObject();
             ActividadDTO act;
@@ -79,14 +80,14 @@ void EstudianteService::fetchActividadesByMateria(long long estudianteId, long l
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
-            qCDebug(lcApi) << "Fetch ActividadesByMateria Error:" << reply->errorString();
+        QByteArray cuerpo;
+        if (!HttpClient::leerConRespaldo(reply, cuerpo)) {
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QList<ActividadDTO> actividades;
-        QJsonArray array = QJsonDocument::fromJson(reply->readAll()).array();
+        QJsonArray array = QJsonDocument::fromJson(cuerpo).array();
         for (const QJsonValue &val : array) {
             QJsonObject obj = val.toObject();
             ActividadDTO act;
@@ -113,13 +114,13 @@ void EstudianteService::fetchActividadConPreguntas(long long actividadId, const 
     QNetworkReply *reply = m_networkManager->get(request);
     connect(reply, &QNetworkReply::finished, this, [this, reply, actividadId]() {
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
-            qCDebug(lcApi) << "Fetch Activity Questions Error [" << actividadId << "]:" << reply->errorString();
+        QByteArray cuerpo;
+        if (!HttpClient::leerConRespaldo(reply, cuerpo)) {
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
-        QByteArray data = reply->readAll();
+        QByteArray data = cuerpo;
         qCDebug(lcApi) << "Questions RAW Response:" << data;
         
         QJsonObject obj = QJsonDocument::fromJson(data).object();
@@ -178,9 +179,17 @@ void EstudianteService::resolverActividad(long long estudianteId, long long acti
     }
     root["respuestas"] = respuestasArr;
 
-    QNetworkReply *reply = m_networkManager->post(createRequest(url, token), QJsonDocument(root).toJson());
-    connect(reply, &QNetworkReply::finished, this, [this, reply, actividadId]() {
+    const QByteArray cuerpo = QJsonDocument(root).toJson(QJsonDocument::Compact);
+    QNetworkReply *reply = m_networkManager->post(createRequest(url, token), cuerpo);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, actividadId, url, cuerpo]() {
         reply->deleteLater();
+        if (Sincronizacion::esSinConexion(reply)) {
+            // Sin conexión: la entrega se guarda y se envía al recuperar la conexión
+            Sincronizacion::instance().encolar("POST", url, cuerpo,
+                                               tr("Entrega de la actividad %1").arg(actividadId));
+            emit actividadEncolada(actividadId);
+            return;
+        }
         if (reply->error() != QNetworkReply::NoError) {
             qCDebug(lcApi) << "Submit Activity Error [" << actividadId << "]:" << reply->errorString();
             emit errorOccurred(HttpClient::errorMessage(reply));

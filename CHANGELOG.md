@@ -1,5 +1,24 @@
 # Changelog — REP Cliente (Qt 6 / QML)
 
+## [0.4.0] — 2026-11-13
+### Nuevo
+- **Mi perfil** (todos los roles, desde el menú del usuario): datos personales, cambio de
+  contraseña con requisitos visibles y borrado de los datos guardados sin conexión.
+- **Mis notas** (estudiante): promedio y desempeño por materia, estado de cada actividad,
+  faltas, detalle de la corrección y boletín en PDF.
+- **Planilla de notas** (profesor): estudiantes × actividades con promedios, desempeño,
+  faltas y exportación a Excel/PDF; la cabecera de cada actividad abre su calificación.
+- **Calificar** rediseñada en vista dividida, con "Guardar y siguiente".
+- **Actividades**: por materia y curso reales (antes curso fijo 1), crear, editar (antes no
+  guardaba), duplicar con preguntas, publicar/ocultar, eliminar y estadísticas.
+- **Usuarios** (admin): alta de usuarios, edición sin reactivar cuentas, cambio de curso,
+  filtro "Por activar" para solicitudes del registro público, eliminación.
+- **Solicitar cuenta** de estudiante desde el inicio de sesión.
+- Asistencia: accesos a los días ya registrados; Estudiantes: exportar CSV.
+- **Sin conexión**: banner de estado, caché persistente por usuario de consultas y
+  archivos (`AlmacenLocal`, revalidación con `ETag`), cola persistente de entregas que se
+  envía sola al reconectar (`Sincronizacion`), avisos (`Toast`).
+
 ## [0.3.0] — 2026-11-13
 ### Nuevo
 - **Material de estudio** (`MaterialPage`): el profesor publica archivos por materia y

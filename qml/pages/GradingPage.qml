@@ -4,176 +4,202 @@ import QtQuick.Layouts
 import Rep
 import "../components"
 
+/*
+ * Calificación de una actividad (vista dividida): a la izquierda las entregas, a la
+ * derecha las respuestas del estudiante seleccionado con la nota y las observaciones.
+ * Antes la lista se pedía a una ruta inexistente y la pantalla quedaba vacía.
+ */
 Page {
     id: root
-    title: "Calificar Entregas"
-    background: Rectangle { color: Theme.background }
-
-    property var stackView: StackView.view
     property int actividadId: 0
-    property string actividadTitulo: "Calificar"
+    property string actividadTitulo: qsTr("Calificar")
+    property var entregas: []
+    property var seleccion: null
+    property var detalle: null
+    property string error: ""
+    property bool guardando: false
 
-    Component.onCompleted: {
-        if (actividadId > 0) {
-            reportsViewModel.loadEntregas(actividadId)
-        }
-    }
-    
-    Connections {
-        target: reportsViewModel
-        function onCalificacionCompleted() {
-            console.log("Calificación guardada")
-            reportsViewModel.loadEntregas(actividadId)
-            successDialog.open()
-            editDialog.close()
-        }
+    background: Rectangle { color: Theme.background }
+    header: PageHeader {
+        title: root.actividadTitulo
+        subtitle: qsTr("%n entrega(s) · %1 por revisar", "", root.entregas.length)
+                  .arg(root.entregas.filter(e => !e.calificada).length)
     }
 
-    header: PageHeader { title: actividadTitulo }
+    ApiRequests { id: requests }
+    Toast { id: toast }
 
-    ColumnLayout {
+    function nota(n) { return n === null || n === undefined ? "—" : Number(n).toFixed(1) }
+
+    function cargar(seleccionarId) {
+        requests.get("/profesor/actividades/" + actividadId + "/respuestas", datos => {
+            entregas = datos || []
+            const objetivo = entregas.find(e => e.estudianteId === seleccionarId) || entregas[0]
+            if (objetivo) seleccionar(objetivo)
+        }, mensaje => { error = mensaje })
+    }
+
+    function seleccionar(entrega) {
+        seleccion = entrega
+        detalle = null
+        notaField.text = entrega.nota !== null ? Number(entrega.nota).toFixed(1) : ""
+        obsField.text = entrega.observaciones || ""
+        requests.get("/actividades/" + actividadId + "/respuestas/" + entrega.estudianteId,
+                     datos => { detalle = datos }, mensaje => { error = mensaje })
+    }
+
+    function guardar() {
+        const valor = parseFloat(notaField.text.replace(",", "."))
+        if (isNaN(valor) || valor < 0 || valor > 5) { error = qsTr("La nota debe estar entre 0.0 y 5.0"); return }
+        error = ""
+        guardando = true
+        const id = seleccion.estudianteId
+        requests.put("/actividades/" + actividadId + "/notas/" + id + "?nota=" + valor
+                     + "&observaciones=" + encodeURIComponent(obsField.text.trim()), null, () => {
+            guardando = false
+            toast.mostrar(qsTr("Calificación guardada"), "exito")
+            // Avanza a la siguiente entrega sin revisar
+            const pendiente = entregas.find(e => !e.calificada && e.estudianteId !== id)
+            cargar(pendiente ? pendiente.estudianteId : id)
+        }, mensaje => { guardando = false; error = mensaje })
+    }
+
+    Component.onCompleted: if (actividadId > 0) cargar()
+
+    RowLayout {
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 15
+        anchors.margins: Theme.spacingL
+        spacing: Theme.spacingM
 
-        Label {
-            text: "Listado de Entregas"
-            font.bold: true
-            font.pixelSize: 18
-            color: Theme.textPrimary
-        }
-
-        ListView {
-            id: submissionsList
-            Layout.fillWidth: true
+        // ------------------------------------------------ entregas
+        Card {
+            Layout.preferredWidth: 300
             Layout.fillHeight: true
-            clip: true
-            model: reportsViewModel.entregasModel
-            spacing: 10
-
-            delegate: Rectangle {
-                width: submissionsList.width
-                height: 80
-                color: "white"
-                radius: 8
-                border.color: Theme.border
-                border.width: 1
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 15
-                    spacing: 15
-
-                    // Avatar
-                    Rectangle {
-                        width: 40; height: 40; radius: 20
-                        color: Theme.primary
-                        Label {
-                            anchors.centerIn: parent
-                            text: model.estudiante ? model.estudiante.charAt(0).toUpperCase() : "?"
-                            color: "white"
-                            font.bold: true
-                        }
+            padding: Theme.spacingS
+            ListView {
+                id: lista
+                anchors.fill: parent
+                clip: true
+                model: root.entregas
+                spacing: 2
+                ScrollBar.vertical: ScrollBar {}
+                EmptyState {
+                    anchors.centerIn: parent
+                    visible: lista.count === 0 && requests.enCurso === 0
+                    title: qsTr("Sin entregas todavía")
+                }
+                delegate: ItemDelegate {
+                    id: item
+                    required property var modelData
+                    width: ListView.view.width
+                    highlighted: root.seleccion && root.seleccion.estudianteId === modelData.estudianteId
+                    onClicked: root.seleccionar(modelData)
+                    background: Rectangle {
+                        radius: Theme.radiusS
+                        color: item.highlighted ? Theme.primarySoft : item.hovered ? Theme.surfaceAlt : "transparent"
                     }
-
-                    // Info
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-                        Label { 
-                            text: model.estudiante
-                            font.bold: true
-                            font.pixelSize: 16
-                            color: Theme.textPrimary
+                    contentItem: RowLayout {
+                        spacing: Theme.spacingS
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            Label { text: item.modelData.nombreEstudiante; color: Theme.textPrimary; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Label {
+                                text: item.modelData.calificada ? qsTr("Revisada") : qsTr("Por revisar")
+                                color: item.modelData.calificada ? Theme.successDark : Theme.warning
+                                font.pixelSize: Theme.fontCaption
+                            }
                         }
-                        Label { 
-                            text: model.fecha !== "---" ? "Entregado: " + model.fecha : "Pendiente"
-                            color: model.fecha !== "---" ? Theme.successDark : Theme.textMuted
-                            font.pixelSize: 13
-                        }
-                    }
-
-                    // Grade Badge
-                    Rectangle {
-                        visible: model.calificada
-                        width: 50; height: 30; radius: 15
-                        color: model.nota >= 3.0 ? Theme.successDark : Theme.dangerDark
-                        Label {
-                            anchors.centerIn: parent
-                            text: model.nota.toFixed(1)
-                            color: "white"
-                            font.bold: true
-                        }
-                    }
-
-                    // Action Button
-                    Button {
-                        text: model.calificada ? "Editar" : "Calificar"
-                        highlighted: !model.calificada
-                        enabled: model.respuestaId > 0 // Only if submitted
-                        onClicked: {
-                            editDialog.respuestaId = model.respuestaId
-                            editDialog.estudianteNombre = model.estudiante
-                            editDialog.currentNota = model.calificada ? model.nota : 0.0
-                            notaField.text = editDialog.currentNota
-                            editDialog.open()
-                        }
+                        Label { text: root.nota(item.modelData.nota); font.weight: Font.DemiBold; color: Theme.textPrimary }
                     }
                 }
             }
         }
-    }
 
-    // Edit Grade Dialog
-    Dialog {
-        id: editDialog
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-        width: 300
-        modal: true
-        focus: true
-        title: "Calificar Entrega"
-        standardButtons: Dialog.Save | Dialog.Cancel
+        // ------------------------------------------------ detalle y calificación
+        Card {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: root.seleccion !== null
 
-        property var respuestaId: 0
-        property string estudianteNombre: ""
-        property double currentNota: 0.0
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: Theme.spacingS
 
-        ColumnLayout {
-            spacing: 20
-            width: parent.width
+                Label {
+                    text: root.seleccion ? root.seleccion.nombreEstudiante : ""
+                    font.pixelSize: Theme.fontTitle
+                    font.weight: Font.DemiBold
+                    color: Theme.textPrimary
+                }
+                Label {
+                    text: root.detalle && root.detalle.fechaEntrega
+                          ? qsTr("Entregada el %1").arg(Qt.formatDateTime(new Date(root.detalle.fechaEntrega), "dd/MM/yyyy HH:mm")) : ""
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontCaption
+                }
 
-            Label {
-                text: "Estudiante: " + editDialog.estudianteNombre
-                font.bold: true
-            }
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: Theme.spacingS
+                        Repeater {
+                            model: root.detalle ? root.detalle.respuestasPreguntas : []
+                            delegate: Rectangle {
+                                required property var modelData
+                                required property int index
+                                readonly property bool abierta: modelData.opcionId === null || modelData.opcionId === undefined
+                                Layout.fillWidth: true
+                                implicitHeight: col.implicitHeight + 2 * Theme.spacingS
+                                radius: Theme.radiusM
+                                color: abierta ? Theme.warningSoft : modelData.esCorrecta ? Theme.successSoft : Theme.dangerSoft
+                                ColumnLayout {
+                                    id: col
+                                    anchors.fill: parent
+                                    anchors.margins: Theme.spacingS
+                                    spacing: 2
+                                    Label { text: (index + 1) + ". " + modelData.enunciado; font.weight: Font.DemiBold; wrapMode: Text.WordWrap; Layout.fillWidth: true; color: Theme.textPrimary }
+                                    Label {
+                                        text: abierta ? (modelData.respuestaAbierta || qsTr("(sin respuesta)"))
+                                                      : (modelData.esCorrecta ? "✔ " : "✖ ") + (modelData.opcionTexto || qsTr("(sin respuesta)"))
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                        color: Theme.textPrimary
+                                    }
+                                    Label { visible: abierta; text: qsTr("Respuesta abierta: revísela y ajuste la nota."); font.pixelSize: Theme.fontCaption; color: Theme.warning }
+                                }
+                            }
+                        }
+                    }
+                }
 
-            TextField {
-                id: notaField
-                placeholderText: "Nota (0.0 - 5.0)"
-                Layout.fillWidth: true
-                inputMethodHints: Qt.ImhFormattedNumbersOnly
-                validator: DoubleValidator { bottom: 0.0; top: 5.0; decimals: 1 }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.spacingM
+                    AppTextField {
+                        id: notaField
+                        label: qsTr("Nota (0.0 – 5.0)")
+                        Layout.preferredWidth: 140
+                        field.validator: RegularExpressionValidator { regularExpression: /^[0-5]([.,]\d)?$/ }
+                    }
+                    AppTextField {
+                        id: obsField
+                        label: qsTr("Observaciones para el estudiante")
+                        Layout.fillWidth: true
+                    }
+                    AppButton {
+                        Layout.alignment: Qt.AlignBottom
+                        text: root.guardando ? qsTr("Guardando…") : qsTr("Guardar y siguiente")
+                        enabled: !root.guardando && notaField.text !== "" && sincronizacion.enLinea
+                        onClicked: root.guardar()
+                    }
+                }
+                Label { visible: root.error !== ""; text: root.error; color: Theme.danger; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             }
         }
-
-        onAccepted: {
-            var n = parseFloat(notaField.text)
-            if (!isNaN(n) && n >= 0 && n <= 5.0) {
-                reportsViewModel.calificar(editDialog.respuestaId, n)
-            } else {
-                console.error("Nota inválida")
-            }
-        }
-    }
-
-    Dialog {
-        id: successDialog
-        anchors.centerIn: parent
-        modal: true
-        title: qsTr("Éxito")
-        width: 360
-        Label { text: qsTr("Calificación guardada correctamente."); wrapMode: Text.WordWrap; width: parent.width }
-        standardButtons: Dialog.Ok
     }
 }

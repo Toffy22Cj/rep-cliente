@@ -146,6 +146,8 @@ Page {
                             ListElement { icon: "📊"; label: "Dashboard"; page: "" }
                             ListElement { icon: "📚"; label: "Mis Cursos"; page: "CoursesPage.qml" }
                             ListElement { icon: "✅"; label: "Asistencia"; page: "AttendancePage.qml" }
+                            ListElement { icon: "📝"; label: "Actividades"; page: "ActivityManagementPage.qml" }
+                            ListElement { icon: "📊"; label: "Planilla de notas"; page: "PlanillaNotasPage.qml" }
                             ListElement { icon: "📄"; label: "Reportes"; page: "ReportsPage.qml" }
                             ListElement { icon: "📚"; label: "Material de estudio"; page: "MaterialPage.qml" }
                         }

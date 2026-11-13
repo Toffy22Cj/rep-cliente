@@ -7,7 +7,7 @@
 namespace Rep {
 
 AuthService::AuthService(QObject *parent)
-    : QObject(parent), m_networkManager(new QNetworkAccessManager(this))
+    : QObject(parent), m_networkManager(HttpClient::red())
 {
 }
 

@@ -59,6 +59,28 @@ Page {
             }
         }
 
+        // Días con asistencia ya registrada (los más recientes): pulsar uno lo abre
+        RowLayout {
+            Layout.fillWidth: true
+            visible: root.fechasRegistradas.length > 0
+            spacing: Theme.spacingS
+            Label { text: qsTr("Registrados:"); color: Theme.textSecondary; font.pixelSize: Theme.fontCaption }
+            Repeater {
+                model: root.fechasRegistradas.slice(0, 8)
+                delegate: AppButton {
+                    required property string modelData
+                    text: { const d = new Date(modelData + "T12:00:00"); return ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"][d.getDay()] + " " + Qt.formatDate(d, "dd/MM") }
+                    variant: fechaField.text === modelData ? "primary" : "secondary"
+                    onClicked: { fechaField.text = modelData; root.updateData() }
+                }
+            }
+            Label {
+                visible: root.fechasRegistradas.length > 8
+                text: qsTr("y %n más", "", root.fechasRegistradas.length - 8)
+                color: Theme.textMuted; font.pixelSize: Theme.fontCaption
+            }
+        }
+
         Rectangle {
             Layout.fillWidth: true
             height: 1
@@ -223,10 +245,24 @@ Page {
         }
     }
 
+    property var fechasRegistradas: []
+    ApiRequests { id: requests }
+    Toast { id: toast }
+
+    function cargarFechas() {
+        const c = profesorViewModel.cursoModel.get(cursoCombo.currentIndex)
+        const m = profesorViewModel.materiaModel.get(materiaCombo.currentIndex)
+        if (!c || !m) return
+        requests.get("/profesor/asistencia/fechas?cursoId=" + c.id + "&materiaId=" + m.id,
+                     datos => { fechasRegistradas = (datos || []).slice().sort().reverse() },
+                     () => { fechasRegistradas = [] })
+    }
+
     function updateData() {
         if (cursoCombo.currentIndex < 0 || materiaCombo.currentIndex < 0) {
             return;
         }
+        cargarFechas()
         
         localAttendanceModel.clear()
         
@@ -263,7 +299,7 @@ Page {
                for (let i = 0; i < estudiantes.length; i++) {
                    localAttendanceModel.append({
                        estudianteId: estudiantes[i].id,
-                       nombreEstudiante: estudiantes[i].nombre,
+                       nombreEstudiante: estudiantes[i].nombre + " " + (estudiantes[i].apellido || ""),
                        estado: "NO_INGRESO",
                        tipoExcusa: "",
                        observacion: ""
@@ -273,8 +309,8 @@ Page {
         }
         function onAsistenciaSaved(success) {
             if (success) {
-                // Show success message or toast (not implemented in this simplified UI)
-                console.log("Asistencia guardada con éxito")
+                toast.mostrar(qsTr("Asistencia del %1 guardada").arg(fechaField.text), "exito")
+                root.cargarFechas()
             }
         }
     }

@@ -11,6 +11,7 @@
 #include "models/PreguntaModel.h"
 #include "api/ApiCliente.h"
 #include "core/SessionManager.h"
+#include "core/Sincronizacion.h"
 #include "core/security/SecureTokenStorage.h"
 #include "core/security/QtKeychainCredentialStore.h"
 
@@ -51,6 +52,8 @@ int main(int argc, char *argv[])
     context->setContextProperty("adminViewModel", &adminViewModel);
     // Cliente genérico de la API para las páginas QML (archivos, preguntas, material)
     context->setContextProperty("api", &apiCliente);
+    // Estado de conexión y envíos pendientes (modo sin conexión)
+    context->setContextProperty("sincronizacion", &Rep::Sincronizacion::instance());
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,

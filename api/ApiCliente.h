@@ -41,6 +41,10 @@ public:
     /** Descarga y abre el archivo con la aplicación predeterminada del sistema. */
     Q_INVOKABLE void abrir(const QString &ruta);
 
+    /** Espacio ocupado por los datos sin conexión del usuario y borrado. */
+    Q_INVOKABLE QString espacioSinConexion() const;
+    Q_INVOKABLE void borrarDatosSinConexion();
+
     /** Formatea un tamaño en bytes (p. ej. "1,2 MB"). */
     Q_INVOKABLE static QString tamanoLegible(qint64 bytes);
 
@@ -56,10 +60,10 @@ signals:
 private:
     int enviar(const QByteArray &metodo, const QString &ruta, const QVariant &cuerpo);
     void atender(int id, class QNetworkReply *reply);
+    void entregarLocal(const QString &ruta, const QUrl &local);
 
     QNetworkAccessManager *m_red;
     int m_siguienteId = 1;
-    QHash<QString, QUrl> m_cache;
     QSet<QString> m_abrirAlDescargar;
     QSet<QString> m_descargando; // evita descargas simultáneas del mismo archivo
 };

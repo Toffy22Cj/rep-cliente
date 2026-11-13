@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import Rep
 import "pages"
+import "components"
 
 ApplicationWindow {
     id: window
@@ -38,9 +39,33 @@ ApplicationWindow {
         toolTipText: Theme.textOnDark
     }
 
+    BannerConexion {
+        id: bannerConexion
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        z: 10
+    }
+
+    Toast { id: toastGlobal }
+
+    // Resultado de los envíos que estaban en cola sin conexión
+    Connections {
+        target: sincronizacion
+        function onEnvioCompletado(descripcion, respuesta) {
+            toastGlobal.mostrar(qsTr("Sincronizado: %1").arg(descripcion), "exito")
+        }
+        function onEnvioRechazado(descripcion, mensaje) {
+            toastGlobal.mostrar(qsTr("No se pudo enviar «%1»: %2").arg(descripcion).arg(mensaje), "error")
+        }
+    }
+
     StackView {
         id: stackView
-        anchors.fill: parent
+        anchors.top: bannerConexion.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
         initialItem: sessionManager.isAuthenticated ? dashboardFor(sessionManager.userRole) : loginComponent
 
         pushEnter: Transition {

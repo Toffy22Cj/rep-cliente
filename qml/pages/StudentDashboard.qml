@@ -16,6 +16,11 @@ Page {
         showBack: false
 
         AppButton {
+            text: qsTr("📊 Mis notas")
+            variant: "secondary"
+            onClicked: root.StackView.view.push("MisNotasPage.qml")
+        }
+        AppButton {
             text: qsTr("📚 Material de estudio")
             variant: "secondary"
             onClicked: root.StackView.view.push("MaterialPage.qml")

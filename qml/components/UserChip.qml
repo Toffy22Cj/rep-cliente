@@ -53,6 +53,12 @@ ItemDelegate {
         id: menu
         y: chip.height
         MenuItem {
+            text: qsTr("Mi perfil")
+            onTriggered: {
+                stackView.push("pages/PerfilPage.qml")
+            }
+        }
+        MenuItem {
             text: qsTr("Cerrar sesión")
             onTriggered: sessionManager.clear()
         }

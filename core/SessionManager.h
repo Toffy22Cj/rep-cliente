@@ -65,6 +65,23 @@ public:
         emit sessionChanged();
     }
 
+    /** Sustituye el token (p. ej. tras cambiar la contraseña, que invalida el anterior). */
+    Q_INVOKABLE void actualizarToken(const QString &token) {
+        m_token = token;
+        m_expiresAt = jwtExpiry(token);
+        SecureTokenStorage::instance().saveToken(token);
+        emit sessionChanged();
+    }
+
+    /** Refleja en la sesión los datos editados en el perfil. */
+    Q_INVOKABLE void actualizarDatos(const QString &nombre, const QString &apellido, const QString &correo) {
+        m_user.nombre = nombre;
+        m_user.apellido = apellido;
+        m_user.correo = correo;
+        saveProfile();
+        emit sessionChanged();
+    }
+
     Q_INVOKABLE void clear() {
         const bool hadSession = !m_token.isEmpty();
         m_user = {};

@@ -137,6 +137,20 @@ Page {
                         onClicked: root.submit()
                     }
 
+                    Label {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.topMargin: Theme.spacingS
+                        text: qsTr("¿Es estudiante y no tiene cuenta? <a href=\"#\">Solicitar cuenta</a>")
+                        textFormat: Text.StyledText
+                        linkColor: Theme.primary
+                        color: Theme.textSecondary
+                        onLinkActivated: {
+                            const pagina = root.StackView.view.push("RegistroPage.qml")
+                            pagina.volver.connect(() => root.StackView.view.pop())
+                        }
+                        HoverHandler { cursorShape: Qt.PointingHandCursor }
+                    }
+
                     BusyIndicator {
                         running: loginViewModel.isLoading
                         visible: running
