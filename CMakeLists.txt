@@ -15,6 +15,7 @@ qt_standard_project_setup(REQUIRES 6.8)
 set(HEADERS
     api/ApiConfig.h
     api/HttpClient.h
+    api/ApiCliente.h
     api/AuthService.h
     api/EstudianteService.h
     api/ProfesorService.h
@@ -45,6 +46,7 @@ set(HEADERS
 set(SOURCES
     main.cpp
     api/HttpClient.cpp
+    api/ApiCliente.cpp
     api/AuthService.cpp
     api/EstudianteService.cpp
     api/ProfesorService.cpp
@@ -69,6 +71,8 @@ set_source_files_properties(qml/theme/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE
 set(QML_FILES
     qml/Main.qml
     qml/theme/Theme.qml
+    qml/components/Adjunto.qml
+    qml/components/ApiRequests.qml
     qml/components/AppButton.qml
     qml/components/AppTabButton.qml
     qml/components/AppTextField.qml
@@ -96,6 +100,7 @@ set(QML_FILES
     qml/pages/CourseManagementPage.qml
     qml/pages/SubjectManagementPage.qml
     qml/pages/AssignmentsManagementPage.qml
+    qml/pages/MaterialPage.qml
 )
 
 qt_add_qml_module(appRep

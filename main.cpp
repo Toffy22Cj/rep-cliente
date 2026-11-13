@@ -9,6 +9,7 @@
 #include "viewmodels/ReportsViewModel.h"
 #include "viewmodels/AdminViewModel.h"
 #include "models/PreguntaModel.h"
+#include "api/ApiCliente.h"
 #include "core/SessionManager.h"
 #include "core/security/SecureTokenStorage.h"
 #include "core/security/QtKeychainCredentialStore.h"
@@ -35,6 +36,7 @@ int main(int argc, char *argv[])
     Rep::ProfesorViewModel profesorViewModel;
     Rep::ReportsViewModel reportsViewModel;
     Rep::AdminViewModel adminViewModel;
+    Rep::ApiCliente apiCliente;
 
     QQmlApplicationEngine engine;
     qmlRegisterType<Rep::PreguntaModel>("Rep", 1, 0, "PreguntaModel");
@@ -47,6 +49,8 @@ int main(int argc, char *argv[])
     context->setContextProperty("profesorViewModel", &profesorViewModel);
     context->setContextProperty("reportsViewModel", &reportsViewModel);
     context->setContextProperty("adminViewModel", &adminViewModel);
+    // Cliente genérico de la API para las páginas QML (archivos, preguntas, material)
+    context->setContextProperty("api", &apiCliente);
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,

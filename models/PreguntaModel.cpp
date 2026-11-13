@@ -26,6 +26,7 @@ QVariant PreguntaModel::data(const QModelIndex &index, int role) const
     case ArchivoUrlRole: return p.archivoUrl;
     case NombreArchivoRole: return p.nombreArchivo;
     case ArchivoDisponibleRole: return p.archivoDisponible;
+    case ArchivoEsImagenRole: return p.archivoEsImagen;
     case OpcionesRole: {
         QVariantList ops;
         for (const auto &o : p.opciones) {
@@ -76,6 +77,7 @@ QHash<int, QByteArray> PreguntaModel::roleNames() const
     roles[OpcionesRole] = "opciones";
     roles[RespuestaAbiertaRole] = "respuestaAbierta";
     roles[OpcionSeleccionadaIdRole] = "opcionSeleccionadaId";
+    roles[ArchivoEsImagenRole] = "archivoEsImagen";
     return roles;
 }
 
