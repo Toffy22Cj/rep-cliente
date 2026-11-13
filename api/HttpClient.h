@@ -1,10 +1,17 @@
 #ifndef HTTPCLIENT_H
 #define HTTPCLIENT_H
 
+#include <QLoggingCategory>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QString>
 #include <QUrl>
+
+/**
+ * Categoría de log de la capa de red. Silenciosa por defecto; para depurar:
+ *   QT_LOGGING_RULES="rep.api.debug=true" ./appRep
+ */
+Q_DECLARE_LOGGING_CATEGORY(lcApi)
 
 namespace Rep {
 

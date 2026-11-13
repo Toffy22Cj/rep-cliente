@@ -265,7 +265,7 @@ void AdminService::fetchAsignaciones(const QString &token)
         }
 
         QByteArray data = reply->readAll();
-        qDebug() << "fetchAsignaciones JSON:" << data;
+        qCDebug(lcApi) << "fetchAsignaciones JSON:" << data;
 
         QList<AsignacionDTO> asignaciones;
         QJsonArray array = QJsonDocument::fromJson(data).array();

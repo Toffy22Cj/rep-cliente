@@ -26,7 +26,7 @@ void EstudianteService::fetchMaterias(long long estudianteId, const QString &tok
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "Fetch Materias Error:" << reply->errorString();
+            qCDebug(lcApi) << "Fetch Materias Error:" << reply->errorString();
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
@@ -48,7 +48,7 @@ void EstudianteService::fetchActividades(long long estudianteId, const QString &
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "Fetch Actividades Error:" << reply->errorString();
+            qCDebug(lcApi) << "Fetch Actividades Error:" << reply->errorString();
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
@@ -80,7 +80,7 @@ void EstudianteService::fetchActividadesByMateria(long long estudianteId, long l
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "Fetch ActividadesByMateria Error:" << reply->errorString();
+            qCDebug(lcApi) << "Fetch ActividadesByMateria Error:" << reply->errorString();
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
@@ -114,13 +114,13 @@ void EstudianteService::fetchActividadConPreguntas(long long actividadId, const 
     connect(reply, &QNetworkReply::finished, this, [this, reply, actividadId]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "Fetch Activity Questions Error [" << actividadId << "]:" << reply->errorString();
+            qCDebug(lcApi) << "Fetch Activity Questions Error [" << actividadId << "]:" << reply->errorString();
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QByteArray data = reply->readAll();
-        qDebug() << "Questions RAW Response:" << data;
+        qCDebug(lcApi) << "Questions RAW Response:" << data;
         
         QJsonObject obj = QJsonDocument::fromJson(data).object();
         ActividadConPreguntasDTO act;
@@ -181,7 +181,7 @@ void EstudianteService::resolverActividad(long long estudianteId, long long acti
     connect(reply, &QNetworkReply::finished, this, [this, reply, actividadId]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "Submit Activity Error [" << actividadId << "]:" << reply->errorString();
+            qCDebug(lcApi) << "Submit Activity Error [" << actividadId << "]:" << reply->errorString();
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }

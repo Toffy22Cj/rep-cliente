@@ -291,6 +291,40 @@ Page {
                 }
             }
 
+            // Aviso cuando el profesor aún no tiene materias/cursos asignados: antes el panel
+            // aparecía vacío y con todo a 0 sin explicar el motivo.
+            Rectangle {
+                Layout.fillWidth: true
+                visible: materiaCombo.count === 0 && !profesorViewModel.isLoading
+                implicitHeight: avisoAsignacion.implicitHeight + 2 * Theme.spacingM
+                radius: Theme.radiusM
+                color: Theme.warningSoft
+                border.color: Theme.warning
+
+                RowLayout {
+                    id: avisoAsignacion
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingM
+                    spacing: Theme.spacingM
+                    Label { text: "\u26A0\uFE0F"; font.pixelSize: 22 }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+                        Label {
+                            text: qsTr("Aún no tienes materias asignadas")
+                            font.weight: Font.DemiBold
+                            color: Theme.textPrimary
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textSecondary
+                            text: qsTr("Pide al administrador que te asigne materias y cursos (Panel web › Académico › Asignaciones). Después pulsa «Actualizar».")
+                        }
+                    }
+                }
+            }
+
             // Stats Grid - CORREGIDO: Layout mejorado
             GridLayout {
                 columns: root.width < 800 ? 1 : 3

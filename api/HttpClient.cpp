@@ -5,6 +5,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+Q_LOGGING_CATEGORY(lcApi, "rep.api", QtInfoMsg)
+
 namespace Rep::HttpClient {
 
 QNetworkRequest jsonRequest(const QUrl &url, const QString &token)
