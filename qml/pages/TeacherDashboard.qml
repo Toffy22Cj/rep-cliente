@@ -147,7 +147,7 @@ Page {
                             ListElement { icon: "📚"; label: "Mis Cursos"; page: "CoursesPage.qml" }
                             ListElement { icon: "✅"; label: "Asistencia"; page: "AttendancePage.qml" }
                             ListElement { icon: "📄"; label: "Reportes"; page: "ReportsPage.qml" }
-                            ListElement { icon: "⚙"; label: "Configuración"; page: "" }
+                            ListElement { icon: "📚"; label: "Material de estudio"; page: "MaterialPage.qml" }
                         }
                         
                         delegate: Rectangle {
@@ -481,7 +481,7 @@ Page {
                                 id: tipoCombo
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 45
-                                model: ["EXAMEN", "QUIZ", "TALLER", "TAREA"]
+                                model: ["EXAMEN", "QUIZ", "TALLER"]
                                 currentIndex: 0
                                 background: Rectangle {
                                     color: Theme.surfaceAlt
@@ -763,7 +763,7 @@ Page {
                         enabled: root.stackView !== null
                         onClicked: {
                             if (root.stackView) {
-                                root.stackView.push("QuestionEditorPage.qml", { actividadId: id })
+                                root.stackView.push("QuestionEditorPage.qml", { actividadId: id, actividadTitulo: titulo })
                             }
                         }
                         ToolTip.visible: hovered

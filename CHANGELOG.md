@@ -1,5 +1,26 @@
 # Changelog — REP Cliente (Qt 6 / QML)
 
+## [0.3.0] — 2026-11-13
+### Nuevo
+- **Material de estudio** (`MaterialPage`): el profesor publica archivos por materia y
+  curso y los elimina; el estudiante los ve, filtra por materia y abre. Accesos desde el
+  menú lateral del profesor y la cabecera del estudiante.
+- **Adjuntos en preguntas**: el editor permite adjuntar imágenes, PDF, documentos, audio
+  o vídeo; las imágenes se ven en línea al resolver la actividad y el resto se abre con la
+  aplicación del sistema (componente `Adjunto`).
+- `ApiCliente` (propiedad de contexto `api`): peticiones JSON genéricas, descarga con
+  caché local y escritura atómica, subida multipart. `ApiRequests.qml` lo envuelve con
+  callbacks para las páginas.
+
+### Corregido
+- **Las preguntas creadas no se mostraban**: la lista del editor era un marcador de
+  posición (`model: 0`). Ahora se cargan del servidor, con opciones, respuesta correcta,
+  adjunto y botón de eliminar.
+- El editor solo admitía 2 opciones y no gestionaba verdadero/falso; ahora 2–5 opciones
+  con selección de la correcta, verdadero/falso y respuesta abierta, con validación.
+- Tipo de actividad "TAREA" eliminado del formulario (el servidor no lo admite).
+- Opción de menú "Configuración" sin pantalla sustituida por "Material de estudio".
+
 ## [0.2.1] — 2026-11-13
 - Dashboard del profesor: aviso cuando no tiene materias asignadas, con instrucciones.
 - Logs de red en la categoría `rep.api`, silenciosa por defecto

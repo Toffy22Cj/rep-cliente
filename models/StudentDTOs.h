@@ -28,9 +28,10 @@ struct PreguntaDTO {
     QString enunciado;
     QString tipo;
     QList<OpcionDTO> opciones;
-    bool archivoDisponible;
+    bool archivoDisponible = false;
     QString nombreArchivo;
     QString archivoUrl;
+    bool archivoEsImagen = false;
     // UI State / Response management
     long long opcionSeleccionadaId = 0;
     QString respuestaAbierta;

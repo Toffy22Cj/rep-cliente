@@ -35,7 +35,7 @@ Page {
                 Rectangle {
                     width: parent.width
                     height: 1
-                    color: "#eee"
+                    color: Theme.border
                 }
 
                 Label {
@@ -44,6 +44,15 @@ Page {
                     font.bold: true
                     wrapMode: Text.WordWrap
                     width: parent.width
+                }
+
+                // Imagen o archivo adjunto de la pregunta
+                Adjunto {
+                    width: parent.width
+                    visible: archivoDisponible
+                    url: archivoDisponible ? archivoUrl : ""
+                    nombre: nombreArchivo
+                    esImagen: archivoEsImagen
                 }
 
                 // Multiple Choice / True-False
@@ -56,7 +65,11 @@ Page {
 
                     Repeater {
                         model: opciones
-                        delegate: RadioButton {
+                        delegate: Column {
+                            required property var modelData
+                            width: optionsColumn.width
+                            spacing: 4
+                            RadioButton {
                             text: modelData.texto
                             checked: opcionSeleccionadaId === modelData.id
                             contentItem: Text {
@@ -69,6 +82,16 @@ Page {
                             }
                             onClicked: {
                                 estudianteViewModel.preguntaModel.selectOpcion(optionsColumn.questionIndex, modelData.id)
+                            }
+                            }
+                            Adjunto {
+                                x: 40
+                                width: parent.width - 40
+                                visible: modelData.archivoDisponible === true
+                                url: modelData.archivoDisponible ? modelData.archivoUrl : ""
+                                nombre: modelData.nombreArchivo || ""
+                                esImagen: /\.(png|jpe?g|gif|webp)$/i.test(modelData.nombreArchivo || "")
+                                alturaMaxima: 180
                             }
                         }
                     }
@@ -89,7 +112,7 @@ Page {
                         }
                     }
                     background: Rectangle {
-                        border.color: "#ddd"
+                        border.color: Theme.border
                         radius: 5
                     }
                 }

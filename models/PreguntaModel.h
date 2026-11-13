@@ -19,7 +19,8 @@ public:
         ArchivoDisponibleRole,
         OpcionesRole,
         RespuestaAbiertaRole,
-        OpcionSeleccionadaIdRole
+        OpcionSeleccionadaIdRole,
+        ArchivoEsImagenRole
     };
 
     explicit PreguntaModel(QObject *parent = nullptr);

@@ -59,7 +59,7 @@ Page {
                         spacing: 5
                         Button {
                             text: "Editar Preguntas"
-                            onClicked: stackView.push("QuestionEditorPage.qml", { actividadId: model.id })
+                            onClicked: stackView.push("QuestionEditorPage.qml", { actividadId: model.id, actividadTitulo: model.titulo })
                         }
                         Button {
                             text: "Detalles"

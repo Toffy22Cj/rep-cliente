@@ -138,6 +138,7 @@ void EstudianteService::fetchActividadConPreguntas(long long actividadId, const 
             p.archivoUrl = pObj["archivoUrl"].toString();
             p.nombreArchivo = pObj["nombreArchivo"].toString();
             p.archivoDisponible = pObj["archivoDisponible"].toBool();
+            p.archivoEsImagen = pObj["archivoEsImagen"].toBool();
 
             QJsonArray opcionesArr = pObj["opciones"].toArray();
             for (const QJsonValue &oVal : opcionesArr) {
