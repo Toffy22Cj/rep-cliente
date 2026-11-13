@@ -21,7 +21,7 @@
 ❌ CORS configurado correctamente
 ❌ Headers de seguridad (CSP, X-Frame-Options)
 
-SCORE: 0/15 ❌ CRÍTICO - NO PRODUCCIÓN
+SCORE: 1/15 ❌ CRÍTICO - NO PRODUCCIÓN (Análisis inicial completado, ruta trazada)
 ```
 
 ### 🏗️ ARQUITECTURA
@@ -127,10 +127,10 @@ SCORE: 0/10 🔴 NO DEPLOYABLE
 
 ### LUNES - Setup
 
-- [ ] Lee PLAN_MEJORAS.md completamente
-- [ ] Lee RECOMENDACIONES_TECNICAS.md
+- [x] Lee PLAN_MEJORAS.md completamente
+- [x] Lee RECOMENDACIONES_TECNICAS.md
 - [ ] Crea rama `feature/security-phase-1`
-- [ ] Setup de QKeyChain en CMakeLists.txt
+- [ ] Setup de Almacenamiento Seguro (System Keyring Integration)
 - [ ] Backup de código actual
 
 ### MARTES - HTTPS
@@ -179,7 +179,8 @@ SCORE: 0/10 🔴 NO DEPLOYABLE
 feat: add HTTPS support with SSL validation
 feat: create BaseService for code reuse
 feat: add input validation utils
-feat: secure token storage with QKeyChain
+feat: add input validation utils
+feat: implement SecureTokenStorage (System Keyring wrapper)
 fix: remove sensitive data from logs
 ```
 
@@ -216,7 +217,7 @@ docs: add security documentation
 
 **Semana 2:**
 
-- [ ] SecureTokenStorage funciona
+- [ ] SecureTokenStorage funciona (Integración nativa SO)
 - [ ] SessionManager usa storage seguro
 - [ ] 0 logs contienen tokens/passwords
 - [ ] Todos los endpoints validan entrada
@@ -238,7 +239,7 @@ docs: add security documentation
 
 - ✅ HTTPS obligatorio en todas las peticiones
 - ✅ Certificados SSL validados
-- ✅ Tokens en keychain, no en memoria
+- ✅ Tokens en System Keyring (libsecret/WinCred), no en memoria
 - ✅ Input validado en cliente y servidor
 - ✅ 0 información sensible en logs
 - ✅ Token expiration implementado
@@ -352,7 +353,7 @@ if (!ValidationUtils::isValidEmail(email)) { /* error */ }
 // Crear request seguro
 QNetworkRequest req = createRequest(url, token);
 
-// Guardar token seguro
+// Guardar token seguro (API Abstracta)
 SecureTokenStorage::instance().saveToken(token);
 
 // Logger seguro

@@ -1,29 +1,15 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Gestión de Actividades"
     property bool createNew: false
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "\u2190"
-                onClicked: stackView.pop()
-            }
-            Label {
-                text: "Gestión de Actividades"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
-            }
-            Item { Layout.fillWidth: true }
-        }
-    }
+    header: PageHeader { title: "Gestión de Actividades" }
 
     ColumnLayout {
         anchors.fill: parent
@@ -55,7 +41,7 @@ Page {
                 height: 100
                 background: Rectangle {
                     color: "white"
-                    border.color: "#ecf0f1"
+                    border.color: Theme.border
                     radius: 8
                     layer.enabled: true
                 }
@@ -65,9 +51,9 @@ Page {
                     anchors.margins: 10
                     Column {
                         Layout.fillWidth: true
-                        Label { text: model.titulo; font.bold: true; font.pixelSize: 18; color: "#2c3e50" }
-                        Label { text: "Tipo: " + model.tipo; font.pixelSize: 14; color: "#7f8c8d" }
-                        Label { text: "Entrega: " + model.fechaEntrega; font.pixelSize: 14; color: "#e67e22" }
+                        Label { text: model.titulo; font.bold: true; font.pixelSize: 18; color: Theme.textPrimary }
+                        Label { text: "Tipo: " + model.tipo; font.pixelSize: 14; color: Theme.textSecondary }
+                        Label { text: "Entrega: " + model.fechaEntrega; font.pixelSize: 14; color: Theme.warning }
                     }
                     Column {
                         spacing: 5

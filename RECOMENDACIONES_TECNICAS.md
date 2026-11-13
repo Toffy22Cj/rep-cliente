@@ -346,45 +346,72 @@ void AuthService::onLoginReply(QNetworkReply *reply)
 
 ## 2. ALMACENAMIENTO SEGURO DE TOKENS
 
-### Crear SecureTokenStorage usando QKeyChain
+### 2. SISTEMA DE ALMACENAMIENTO SEGURO (Moderno & Abstracto)
 
-**Primero, agregar QKeyChain a CMakeLists.txt:**
+En lugar de acoplar la aplicación directamente a una librería específica, se recomienda definir una interfaz `ICredentialStore` e inyectar la implementación. Esto permite cambiar entre `QtKeychain`, `libsecret` nativo, o implementaciones específicas de plataforma (Windows Credential Manager, Apple Keychain) sin afectar al resto de la app.
+
+**Definición de la Interfaz:**
+
+```cpp
+// core/security/ICredentialStore.h
+#pragma once
+#include <QString>
+#include <QDateTime>
+#include <expected> // C++23 o custom result type
+
+namespace Rep::Security {
+
+class ICredentialStore {
+public:
+    virtual ~ICredentialStore() = default;
+
+    virtual bool saveToken(const QString &service, const QString &key, const QString &token) = 0;
+    virtual QString loadToken(const QString &service, const QString &key) = 0;
+    virtual bool deleteToken(const QString &service, const QString &key) = 0;
+};
+
+}
+```
+
+**Implementación Recomendada (Wrapper):**
+
+Aunque existen librerías como `QtKeychain`, para proyectos modernos se sugiere un wrapper que permita soporte futuro de **Biometría** (TouchID/Windows Hello) que librerías antiguas no siempre soportan bien.
+
+Para esta fase, `QtKeychain` sigue siendo la opción más estable cross-platform para Qt, pero debe ser usada **detrás de la interfaz**:
 
 ```cmake
-# En CMakeLists.txt, buscar find_package y agregar:
+# CMakeLists.txt
 find_package(Qt6Keychain REQUIRED)
-
-# Luego en target_link_libraries agregar:
 target_link_libraries(appRep PRIVATE qt6keychain)
 ```
 
 **Implementar:**
 
 ```cpp
-// core/SecureTokenStorage.h
+// core/security/SecureTokenStorage.h
+// Implementación concreta usando la interfaz
 #ifndef SECURETOKENSTORAGE_H
 #define SECURETOKENSTORAGE_H
 
 #include <QString>
 #include <QDateTime>
+#include <memory>
+#include "ICredentialStore.h"
 
 namespace Rep {
 
 class SecureTokenStorage
 {
 public:
+    // Singleton con Dependency Injection (Service Locator pattern simplificado para Qt)
     static SecureTokenStorage& instance();
+    
+    // Configurar el backend de almacenamiento (llamar al inicio)
+    void setBackend(std::unique_ptr<Security::ICredentialStore> backend);
 
-    // Guardar token de forma segura
     bool saveToken(const QString &token);
-
-    // Obtener token
     QString getToken() const;
-
-    // Eliminar token
     bool deleteToken();
-
-    // Validar si el token existe
     bool hasToken() const;
 
     // Validar expiración
@@ -398,8 +425,9 @@ public:
     QString getRefreshToken() const;
 
 private:
-    SecureTokenStorage();
-
+    SecureTokenStorage() = default;
+    std::unique_ptr<Security::ICredentialStore> m_backend;
+    
     static constexpr const char *SERVICE_NAME = "RepEducativo";
     static constexpr const char *TOKEN_KEY = "auth_token";
     static constexpr const char *REFRESH_KEY = "refresh_token";
@@ -414,11 +442,13 @@ private:
 ```cpp
 // core/SecureTokenStorage.cpp
 #include "SecureTokenStorage.h"
-#include <QKeychain/keychain.h>
 #include <QSettings>
 #include <QDateTime>
 #include <QDebug>
 #include <QCoreApplication>
+
+// Note: QKeychain headers are no longer directly included here,
+// as the implementation now relies on the ICredentialStore interface.
 
 namespace Rep {
 
@@ -428,38 +458,32 @@ SecureTokenStorage& SecureTokenStorage::instance()
     return inst;
 }
 
+void SecureTokenStorage::setBackend(std::unique_ptr<Security::ICredentialStore> backend)
+{
+    m_backend = std::move(backend);
+}
+
 SecureTokenStorage::SecureTokenStorage() = default;
 
 bool SecureTokenStorage::saveToken(const QString &token)
 {
-    // El token se guarda en el keychain del sistema (seguro)
-    QKeychain::WritePasswordJob job(SERVICE_NAME);
-    job.setAutoDelete(false);
-    job.setKey(TOKEN_KEY);
-    job.setTextData(token);
-
-    QEventLoop loop;
-    QObject::connect(&job, &QKeychain::Job::finished, &loop, &QEventLoop::quit);
-    job.start();
-    loop.exec();
-
-    if (job.error() != QKeychain::NoError) {
-        qCritical() << "Failed to save token:" << job.errorString();
+    if (!m_backend) {
+        qWarning() << "Secure storage backend not initialized!";
         return false;
     }
 
-    // También guardar fecha de expiración (sin sensibilidad)
-    // Asumir 24 horas de expiración (ajustar según backend)
-    QSettings settings;
-    settings.setValue("token_expiry", QDateTime::currentDateTime().addSecs(86400).toString(Qt::ISODate));
-
-    qDebug() << "Token saved securely";
-    return true;
+    if (m_backend->saveToken(SERVICE_NAME, TOKEN_KEY, token)) {
+         // También guardar fecha de expiración (sin sensibilidad)
+        QSettings settings;
+        settings.setValue("token_expiry", QDateTime::currentDateTime().addSecs(86400).toString(Qt::ISODate));
+        qDebug() << "Token saved securely via backend";
+        return true;
+    }
+    return false;
 }
 
 QString SecureTokenStorage::getToken() const
 {
-    QKeychain::ReadPasswordJob job(SERVICE_NAME);
     job.setAutoDelete(false);
     job.setKey(TOKEN_KEY);
 
@@ -734,7 +758,9 @@ TEST_F(AuthServiceTest, RejectWeakPassword) {
 - [ ] Crear SecureTokenStorage
 - [ ] Actualizar SessionManager
 - [ ] Crear Logger
-- [ ] Instalar QKeyChain
+- [ ] Crear Interfaz `ICredentialStore`
+- [ ] Implementar Backend `QtKeychainCredentialStore`
+- [ ] Actualizar SecureTokenStorage para usar inyección
 - [ ] Pruebas manuales de HTTPS
 - [ ] Pruebas de validación de entrada
 - [ ] Documentar cambios

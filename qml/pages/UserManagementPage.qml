@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Gestión de Usuarios"
-    background: Rectangle { color: "#f4f6f9" }
+    background: Rectangle { color: Theme.background }
     property var stackView: StackView.view
 
     Component.onCompleted: adminViewModel.loadUsuarios()
@@ -20,18 +21,7 @@ Page {
         }
     }
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "←"
-                onClicked: stackView.pop()
-                contentItem: Text { text: "←"; color: "white"; font.pixelSize: 24; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-            }
-            Label { text: "Gestión de Usuarios"; color: "white"; font.bold: true; font.pixelSize: 18 }
-        }
-    }
+    header: PageHeader { title: "Gestión de Usuarios" }
 
     ColumnLayout {
         anchors.fill: parent
@@ -41,13 +31,14 @@ Page {
         // Header Actions
         RowLayout {
             Layout.fillWidth: true
-            TextField {
-                placeholderText: "Buscar usuario..."
+            AppTextField {
+                id: searchField
+                placeholderText: qsTr("Buscar por nombre, correo o rol…")
                 Layout.fillWidth: true
-                // Filtering to be implemented later
             }
-            Button {
-                text: "↻ Actualizar"
+            AppButton {
+                text: qsTr("\u21BB Actualizar")
+                variant: "secondary"
                 onClicked: adminViewModel.loadUsuarios()
             }
         }
@@ -61,12 +52,20 @@ Page {
             model: adminViewModel.usuarioModel
             spacing: 8
 
+            // Filtro local: oculta las filas que no coinciden con la búsqueda
+            function matches(nombre, correo, rol) {
+                const q = searchField.text.trim().toLowerCase()
+                return q === "" || (nombre + " " + correo + " " + rol).toLowerCase().indexOf(q) !== -1
+            }
+
             delegate: Rectangle {
+                readonly property bool shown: userList.matches(model.nombre || "", model.correo || "", model.rol || "")
+                visible: shown
                 width: userList.width
-                height: 80
-                color: "white"
-                radius: 8
-                border.color: "#ecf0f1"
+                height: shown ? 80 : 0
+                color: Theme.surface
+                radius: Theme.radiusM
+                border.color: Theme.border
 
                 RowLayout {
                     anchors.fill: parent
@@ -75,7 +74,7 @@ Page {
 
                     Rectangle {
                         width: 40; height: 40; radius: 20
-                        color: model.rol === "ADMIN" ? "#e74c3c" : (model.rol === "PROFESOR" ? "#3498db" : "#2ecc71")
+                        color: model.rol === "ADMIN" ? Theme.danger : (model.rol === "PROFESOR" ? Theme.primary : Theme.success)
                         Label {
                             anchors.centerIn: parent
                             text: model.nombre ? model.nombre.charAt(0).toUpperCase() : "?"
@@ -87,17 +86,23 @@ Page {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 2
-                        Label { text: model.nombre; font.bold: true; font.pixelSize: 16 }
-                        Label { text: model.correo; color: "#7f8c8d" }
+                        Label { text: model.nombre; font.weight: Font.DemiBold; font.pixelSize: Theme.fontSubtitle; color: Theme.textPrimary; elide: Text.ElideRight; Layout.fillWidth: true }
+                        Label { text: model.correo; color: Theme.textSecondary; elide: Text.ElideRight; Layout.fillWidth: true }
                     }
 
-                    Label {
-                        text: model.rol
-                        font.bold: true
-                        color: model.rol === "ADMIN" ? "#c0392b" : "#7f8c8d"
+                    Item {
+                        Layout.preferredWidth: 130
+                        implicitHeight: rolBadge.implicitHeight
+                        Badge {
+                            id: rolBadge
+                            text: model.rol
+                            tint: model.rol === "ADMIN" ? Theme.dangerDark : (model.rol === "PROFESOR" ? Theme.primary : Theme.successDark)
+                            softTint: model.rol === "ADMIN" ? Theme.dangerSoft : (model.rol === "PROFESOR" ? Theme.primarySoft : Theme.successSoft)
+                        }
                     }
 
                     Switch {
+                        Layout.preferredWidth: 140
                         checked: model.activo
                         text: checked ? "Activo" : "Inactivo"
                         onToggled: adminViewModel.toggleUsuarioEstado(model.id, checked)

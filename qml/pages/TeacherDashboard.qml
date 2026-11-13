@@ -1,18 +1,18 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import Rep
 import "../components"
 
 Page {
     id: root
-    background: Rectangle { color: "#f4f6f9" }
+    background: Rectangle { color: Theme.background }
     
     // CORREGIDO: Cambiar readonly a property normal
-    property color primaryColor: "#3498db"
-    property color sidebarColor: "#2c3e50"
-    property color textColor: "#2c3e50"
-    property color accentColor: "#e74c3c"
+    property color primaryColor: Theme.primary
+    property color sidebarColor: Theme.textPrimary
+    property color textColor: Theme.textPrimary
+    property color accentColor: Theme.danger
     
     // Agregar referencia al StackView
     property var stackView: StackView.view
@@ -120,7 +120,7 @@ Page {
                             }
                             Label {
                                 text: "Profesor"
-                                color: "#bdc3c7"
+                                color: Theme.textMuted
                                 font.pixelSize: 13
                                 Layout.alignment: Qt.AlignHCenter
                             }
@@ -132,7 +132,7 @@ Page {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 1
-                    color: "#34495e"
+                    color: Theme.surfaceDark
                 }
 
                 // Menu Items - CORREGIDO: Manejo de navegación
@@ -154,8 +154,8 @@ Page {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 50
                             color: {
-                                if (menuMouseArea.containsMouse) return index === 0 ? "#34495e" : "#3e5871"
-                                return index === 0 ? "#34495e" : "transparent"
+                                if (menuMouseArea.containsMouse) return index === 0 ? Theme.surfaceDark : Theme.surfaceDark
+                                return index === 0 ? Theme.surfaceDark : "transparent"
                             }
                             
                             RowLayout {
@@ -207,7 +207,7 @@ Page {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 60
-                    color: "#c0392b"
+                    color: Theme.dangerDark
 
                     RowLayout {
                         anchors.centerIn: parent
@@ -232,15 +232,18 @@ Page {
 
     // Main Content Area
     ScrollView {
+        id: mainScroll
         anchors.fill: parent
         clip: true
+        // El ancho del contenido se fija al disponible: antes dependía de su propio
+        // ancho implícito (bucle de layout) y el panel ocupaba solo ~600 px.
+        contentWidth: availableWidth
 
         ColumnLayout {
-            width: Math.min(parent.width, 1200) - 40
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 20
-            spacing: 25
+            width: Math.min(mainScroll.availableWidth - 2 * Theme.spacingXl, Theme.maxContentWidth)
+            x: (mainScroll.availableWidth - width) / 2
+            y: Theme.spacingL
+            spacing: Theme.spacingL
 
             // Header Section
             RowLayout {
@@ -255,7 +258,7 @@ Page {
                     background: Rectangle {
                         color: "white"
                         radius: 8
-                        border.color: "#dfe6e9"
+                        border.color: Theme.border
                     }
                 }
 
@@ -270,7 +273,7 @@ Page {
                     Label {
                         text: "Bienvenido a tu panel de control"
                         font.pixelSize: 14
-                        color: "#7f8c8d"
+                        color: Theme.textSecondary
                     }
                 }
                 
@@ -288,6 +291,40 @@ Page {
                 }
             }
 
+            // Aviso cuando el profesor aún no tiene materias/cursos asignados: antes el panel
+            // aparecía vacío y con todo a 0 sin explicar el motivo.
+            Rectangle {
+                Layout.fillWidth: true
+                visible: materiaCombo.count === 0 && !profesorViewModel.isLoading
+                implicitHeight: avisoAsignacion.implicitHeight + 2 * Theme.spacingM
+                radius: Theme.radiusM
+                color: Theme.warningSoft
+                border.color: Theme.warning
+
+                RowLayout {
+                    id: avisoAsignacion
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingM
+                    spacing: Theme.spacingM
+                    Label { text: "\u26A0\uFE0F"; font.pixelSize: 22 }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+                        Label {
+                            text: qsTr("Aún no tienes materias asignadas")
+                            font.weight: Font.DemiBold
+                            color: Theme.textPrimary
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textSecondary
+                            text: qsTr("Pide al administrador que te asigne materias y cursos (Panel web › Académico › Asignaciones). Después pulsa «Actualizar».")
+                        }
+                    }
+                }
+            }
+
             // Stats Grid - CORREGIDO: Layout mejorado
             GridLayout {
                 columns: root.width < 800 ? 1 : 3
@@ -300,21 +337,21 @@ Page {
                     title: "Estudiantes Totales"
                     value: profesorViewModel.totalEstudiantes || 0
                     icon: "👥"
-                    color: "#3498db"
+                    color: Theme.primary
                 }
 
                 StatCard {
                     title: "Actividades Activas"
                     value: profesorViewModel.actividadesActivas || 0
                     icon: "📝"
-                    color: "#2ecc71"
+                    color: Theme.success
                 }
 
                 StatCard {
                     title: "Entregas Pendientes"
                     value: profesorViewModel.entregasPendientes || 0
                     icon: "⚠️"
-                    color: "#e67e22"
+                    color: Theme.warning
                 }
             }
 
@@ -325,7 +362,7 @@ Page {
                 color: "white"
                 radius: 12
                 
-                border.color: "#dfe6e9"
+                border.color: Theme.border
                 border.width: 1
 
                 ColumnLayout {
@@ -350,7 +387,7 @@ Page {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 8
-                            Label { text: "Materia"; font.bold: true; color: "#7f8c8d" }
+                            Label { text: "Materia"; font.bold: true; color: Theme.textSecondary }
                             ComboBox {
                                 id: materiaCombo
                                 Layout.fillWidth: true
@@ -360,8 +397,8 @@ Page {
                                 displayText: currentIndex >= 0 ? currentText : "Seleccione materia..."
                                 
                                 background: Rectangle {
-                                    color: "#f8f9fa"
-                                    border.color: "#dfe6e9"
+                                    color: Theme.surfaceAlt
+                                    border.color: Theme.border
                                     radius: 6
                                 }
                                 
@@ -373,7 +410,7 @@ Page {
                                     width: materiaCombo.width
                                     contentItem: Text {
                                         text: model.nombre
-                                        color: "#2c3e50"
+                                        color: Theme.textPrimary
                                         font.pixelSize: 14
                                         elide: Text.ElideRight
                                         verticalAlignment: Text.AlignVCenter
@@ -391,7 +428,7 @@ Page {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 8
-                            Label { text: "Curso"; font.bold: true; color: "#7f8c8d" }
+                            Label { text: "Curso"; font.bold: true; color: Theme.textSecondary }
                             ComboBox {
                                 id: cursoCombo
                                 Layout.fillWidth: true
@@ -401,8 +438,8 @@ Page {
                                 displayText: currentIndex >= 0 ? currentText : "Seleccione curso..."
                                 
                                 background: Rectangle {
-                                    color: "#f8f9fa"
-                                    border.color: "#dfe6e9"
+                                    color: Theme.surfaceAlt
+                                    border.color: Theme.border
                                     radius: 6
                                 }
                                 
@@ -414,7 +451,7 @@ Page {
                                     width: cursoCombo.width
                                     contentItem: Text {
                                         text: model.nombre
-                                        color: "#2c3e50"
+                                        color: Theme.textPrimary
                                         font.pixelSize: 14
                                         elide: Text.ElideRight
                                         verticalAlignment: Text.AlignVCenter
@@ -439,7 +476,7 @@ Page {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 8
-                            Label { text: "Tipo de Actividad"; font.bold: true; color: "#7f8c8d" }
+                            Label { text: "Tipo de Actividad"; font.bold: true; color: Theme.textSecondary }
                             ComboBox {
                                 id: tipoCombo
                                 Layout.fillWidth: true
@@ -447,8 +484,8 @@ Page {
                                 model: ["EXAMEN", "QUIZ", "TALLER", "TAREA"]
                                 currentIndex: 0
                                 background: Rectangle {
-                                    color: "#f8f9fa"
-                                    border.color: "#dfe6e9"
+                                    color: Theme.surfaceAlt
+                                    border.color: Theme.border
                                     radius: 6
                                 }
                             }
@@ -457,15 +494,15 @@ Page {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 8
-                            Label { text: "Título"; font.bold: true; color: "#7f8c8d" }
+                            Label { text: "Título"; font.bold: true; color: Theme.textSecondary }
                             TextField {
                                 id: tituloField
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 45
                                 placeholderText: "Ej: Parcial Corte 1"
                                 background: Rectangle {
-                                    color: "#f8f9fa"
-                                    border.color: "#dfe6e9"
+                                    color: Theme.surfaceAlt
+                                    border.color: Theme.border
                                     radius: 6
                                 }
                             }
@@ -474,7 +511,7 @@ Page {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 8
-                            Label { text: "Fecha Límite"; font.bold: true; color: "#7f8c8d" }
+                            Label { text: "Fecha Límite"; font.bold: true; color: Theme.textSecondary }
                             
                             Button {
                                 Layout.fillWidth: true
@@ -485,14 +522,14 @@ Page {
                                 onClicked: datePickerPopup.open()
                                 
                                 background: Rectangle {
-                                    color: "#f8f9fa"
-                                    border.color: "#dfe6e9"
+                                    color: Theme.surfaceAlt
+                                    border.color: Theme.border
                                     radius: 6
                                 }
                                 
                                 contentItem: Label {
                                     text: parent.text
-                                    color: datePickerPopup.selectedDate ? textColor : "#bdc3c7"
+                                    color: datePickerPopup.selectedDate ? textColor : Theme.textMuted
                                     horizontalAlignment: Text.AlignLeft
                                     leftPadding: 10
                                 }
@@ -502,7 +539,7 @@ Page {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 8
-                            Label { text: "Duración (min)"; font.bold: true; color: "#7f8c8d" }
+                            Label { text: "Duración (min)"; font.bold: true; color: Theme.textSecondary }
                             TextField {
                                 id: duracionField
                                 Layout.fillWidth: true
@@ -512,8 +549,8 @@ Page {
                                 inputMethodHints: Qt.ImhDigitsOnly
                                 validator: IntValidator { bottom: 1; top: 9999 }
                                 background: Rectangle {
-                                    color: "#f8f9fa"
-                                    border.color: "#dfe6e9"
+                                    color: Theme.surfaceAlt
+                                    border.color: Theme.border
                                     radius: 6
                                 }
                             }
@@ -527,7 +564,7 @@ Page {
                         Layout.topMargin: 10
                         
                         background: Rectangle {
-                            color: parent.enabled ? (parent.pressed ? "#2980b9" : primaryColor) : "#bdc3c7"
+                            color: parent.enabled ? (parent.pressed ? Theme.primaryDark : primaryColor) : Theme.textMuted
                             radius: 8
                         }
                         
@@ -583,7 +620,7 @@ Page {
                 color: "white"
                 radius: 12
                 
-                border.color: "#dfe6e9"
+                border.color: Theme.border
                 border.width: 1
 
                 ColumnLayout {
@@ -614,7 +651,7 @@ Page {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 40
-                        color: "#f8f9fa"
+                        color: Theme.surfaceAlt
                         radius: 6
 
                         RowLayout {
@@ -623,10 +660,10 @@ Page {
                             anchors.rightMargin: 15
                             spacing: 10
                             
-                            Label { Layout.fillWidth: true; text: "ACTIVIDAD"; font.bold: true; font.pixelSize: 12; color: "#95a5a6" }
-                            Label { Layout.preferredWidth: 80; text: "TIPO"; font.bold: true; font.pixelSize: 12; color: "#95a5a6" }
-                            Label { Layout.preferredWidth: 100; text: "ENTREGA"; font.bold: true; font.pixelSize: 12; color: "#95a5a6" }
-                            Label { Layout.preferredWidth: 80; text: "TIEMPO"; font.bold: true; font.pixelSize: 12; color: "#95a5a6" }
+                            Label { Layout.fillWidth: true; text: "ACTIVIDAD"; font.bold: true; font.pixelSize: 12; color: Theme.textMuted }
+                            Label { Layout.preferredWidth: 80; text: "TIPO"; font.bold: true; font.pixelSize: 12; color: Theme.textMuted }
+                            Label { Layout.preferredWidth: 100; text: "ENTREGA"; font.bold: true; font.pixelSize: 12; color: Theme.textMuted }
+                            Label { Layout.preferredWidth: 80; text: "TIEMPO"; font.bold: true; font.pixelSize: 12; color: Theme.textMuted }
                             Label { Layout.preferredWidth: 40; text: ""; } // Action space
                         }
                     }
@@ -656,7 +693,7 @@ Page {
                 height: 60
                 color: "white"
                 radius: 8
-                border.color: "#f1f2f6"
+                border.color: Theme.surfaceAlt
                 border.width: 1
 
                 RowLayout {
@@ -666,9 +703,9 @@ Page {
 
                     Rectangle {
                         width: 36; height: 36; radius: 18
-                        color: tipo === "EXAMEN" ? "#e8f6f3" : 
-                               tipo === "QUIZ" ? "#fef9e7" : 
-                               tipo === "TALLER" ? "#f4ecf7" : "#eaf2f8"
+                        color: tipo === "EXAMEN" ? Theme.successSoft : 
+                               tipo === "QUIZ" ? Theme.warningSoft : 
+                               tipo === "TALLER" ? Theme.primarySoft : Theme.primarySoft
                         Label { 
                             anchors.centerIn: parent
                             text: tipo === "EXAMEN" ? "📝" : 
@@ -689,7 +726,7 @@ Page {
                         Label {
                             text: materia || ""
                             font.pixelSize: 11
-                            color: "#bdc3c7"
+                            color: Theme.textMuted
                             elide: Text.ElideRight
                         }
                     }
@@ -697,7 +734,7 @@ Page {
                     Label {
                         Layout.preferredWidth: 100
                         text: tipo || ""
-                        color: "#3498db"
+                        color: Theme.primary
                         font.bold: true
                         font.pixelSize: 12
                         elide: Text.ElideRight
@@ -706,7 +743,7 @@ Page {
                     Label {
                         Layout.preferredWidth: 100
                         text: fechaEntrega ? fechaEntrega.split('T')[0] : "--/--/----"
-                        color: "#7f8c8d"
+                        color: Theme.textSecondary
                         font.pixelSize: 13
                         elide: Text.ElideRight
                     }
@@ -714,7 +751,7 @@ Page {
                     Label {
                         Layout.preferredWidth: 80
                         text: (duracion || "0") + " min"
-                        color: "#7f8c8d"
+                        color: Theme.textSecondary
                         font.pixelSize: 13
                         elide: Text.ElideRight
                     }
@@ -751,14 +788,14 @@ Page {
             
             Label {
                 text: "No hay actividades creadas"
-                color: "#bdc3c7"
+                color: Theme.textMuted
                 font.pixelSize: 16
                 Layout.alignment: Qt.AlignHCenter
             }
             
             Label {
                 text: "Selecciona una materia y curso para ver las actividades"
-                color: "#bdc3c7"
+                color: Theme.textMuted
                 font.pixelSize: 12
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -780,7 +817,7 @@ Page {
         background: Rectangle {
             color: "white"
             radius: 12
-            border.color: "#dfe6e9"
+            border.color: Theme.border
             border.width: 1
         }
 

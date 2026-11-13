@@ -1,76 +1,93 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
+import "../components"
 
 Page {
     id: root
+    background: Rectangle { color: Theme.background }
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            Label {
-                text: "Dashboard Estudiante"
-                color: "white"
-                font.bold: true
-                Layout.leftMargin: 10
-            }
-            Item { Layout.fillWidth: true }
-            Label {
-                text: sessionManager.userName
-                color: "white"
-                Layout.rightMargin: 10
-            }
-            ToolButton {
-                text: "Log Out"
-                onClicked: sessionManager.clear()
-            }
+    property int selectedMateria: -1
+
+    header: PageHeader {
+        title: qsTr("Mi espacio")
+        subtitle: qsTr("Materias y actividades pendientes")
+        showBack: false
+
+        AppButton {
+            text: qsTr("↻ Actualizar")
+            variant: "secondary"
+            onClicked: root.reload()
         }
     }
 
+    function reload() {
+        selectedMateria = -1
+        estudianteViewModel.loadMaterias()
+        estudianteViewModel.loadActividades()
+    }
+
     ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 10
-        spacing: 20
+        width: Math.min(parent.width - 2 * Theme.spacingXl, Theme.maxContentWidth)
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.topMargin: Theme.spacingL
+        anchors.bottomMargin: Theme.spacingL
+        spacing: Theme.spacingM
 
         Label {
-            text: "Mis Materias"
-            font.pointSize: 18
-            font.bold: true
+            text: qsTr("Hola, %1 👋").arg(sessionManager.userName)
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontHeadline
+            font.weight: Font.Bold
         }
 
-        ListView {
-            id: materiasList
-            Layout.fillWidth: true
-            Layout.preferredHeight: 150
-            orientation: ListView.Horizontal
-            model: estudianteViewModel.materiaModel
-            spacing: 10
-            clip: true
+        // ---- Materias (filtro) ----
+        Label {
+            text: qsTr("Mis materias")
+            color: Theme.textSecondary
+            font.pixelSize: Theme.fontCaption
+            font.weight: Font.DemiBold
+            font.capitalization: Font.AllUppercase
+        }
 
-            delegate: ItemDelegate {
-                width: 150
-                height: 100
-                background: Rectangle {
-                    color: "#3498db"
-                    radius: 10
+        Flow {
+            Layout.fillWidth: true
+            spacing: Theme.spacingS
+
+            AppButton {
+                text: qsTr("Todas")
+                variant: root.selectedMateria === -1 ? "primary" : "secondary"
+                onClicked: {
+                    root.selectedMateria = -1
+                    estudianteViewModel.loadActividades()
                 }
-                contentItem: Text {
+            }
+
+            Repeater {
+                model: estudianteViewModel.materiaModel
+                delegate: AppButton {
+                    required property var model
                     text: model.nombre
-                    color: "white"
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WordWrap
+                    variant: root.selectedMateria === model.id ? "primary" : "secondary"
+                    onClicked: {
+                        root.selectedMateria = model.id
+                        estudianteViewModel.loadActividadesByMateria(model.id)
+                    }
                 }
-                onClicked: estudianteViewModel.loadActividadesByMateria(model.id)
             }
         }
 
+        // ---- Actividades ----
         Label {
-            text: "Actividades Pendientes"
-            font.pointSize: 18
-            font.bold: true
+            text: qsTr("Actividades")
+            color: Theme.textSecondary
+            font.pixelSize: Theme.fontCaption
+            font.weight: Font.DemiBold
+            font.capitalization: Font.AllUppercase
+            Layout.topMargin: Theme.spacingS
         }
 
         ListView {
@@ -78,55 +95,84 @@ Page {
             Layout.fillWidth: true
             Layout.fillHeight: true
             model: estudianteViewModel.actividadModel
-            spacing: 10
+            spacing: Theme.spacingS
             clip: true
+            ScrollBar.vertical: ScrollBar {}
 
-            delegate: ItemDelegate {
-                width: parent.width
-                height: 100
-                padding: 10
-                background: Rectangle {
-                    color: "white"
-                    border.color: "#bdc3c7"
-                    radius: 5
-                }
-                contentItem: RowLayout {
-                    spacing: 10
-                    Column {
-                        Layout.fillWidth: true
-                        Text { text: model.titulo; font.bold: true; font.pointSize: 14 }
-                        Text { text: model.materiaNombre; color: "#7f8c8d" }
-                        Text { text: "Entrega: " + model.fechaEntrega; color: "#e74c3c" }
+            EmptyState {
+                anchors.centerIn: parent
+                visible: actividadesList.count === 0 && !estudianteViewModel.isLoading
+                icon: "🎉"
+                title: qsTr("No hay actividades")
+                message: qsTr("Cuando tus profesores publiquen actividades aparecerán aquí.")
+            }
+
+            delegate: Card {
+                id: actCard
+                required property var model
+                width: ListView.view.width
+                hoverable: true
+                padding: Theme.spacingM
+
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: Theme.spacingM
+
+                    Rectangle {
+                        Layout.preferredWidth: 4
+                        Layout.fillHeight: true
+                        radius: 2
+                        color: Theme.primary
                     }
-                    Column {
-                        Layout.preferredWidth: 80
-                        Label {
-                            text: model.tipo
-                            font.pixelSize: 12
-                            color: "#7f8c8d"
-                            horizontalAlignment: Text.AlignRight
-                            Layout.fillWidth: true
-                        }
-                        Button {
-                            text: "Resolver"
-                            onClicked: {
-                                estudianteViewModel.startActividad(model.id)
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingXs
+                        RowLayout {
+                            spacing: Theme.spacingS
+                            Label {
+                                text: actCard.model.titulo
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSubtitle
+                                font.weight: Font.DemiBold
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
                             }
-                            Layout.alignment: Qt.AlignRight
+                            Badge { text: String(actCard.model.tipo).toUpperCase() }
                         }
+                        Label {
+                            text: actCard.model.materiaNombre
+                            color: Theme.textSecondary
+                        }
+                        Label {
+                            visible: actCard.model.fechaEntrega !== ""
+                            text: qsTr("Entrega: %1").arg(actCard.model.fechaEntrega)
+                            color: Theme.warning
+                            font.pixelSize: Theme.fontCaption
+                            font.weight: Font.Medium
+                        }
+                    }
+
+                    AppButton {
+                        text: qsTr("Resolver")
+                        onClicked: estudianteViewModel.startActividad(actCard.model.id)
                     }
                 }
             }
         }
     }
 
+    BusyIndicator {
+        anchors.centerIn: parent
+        running: estudianteViewModel.isLoading
+        visible: running
+    }
+
     Connections {
         target: estudianteViewModel
-        
         function onActividadConPreguntasFetched() {
-            stackView.push("ActivityResolutionPage.qml")
+            root.StackView.view.push("ActivityResolutionPage.qml")
         }
-
         function onErrorOccurred(error) {
             errorDialog.text = error
             errorDialog.open()
@@ -136,24 +182,17 @@ Page {
     Dialog {
         id: errorDialog
         property alias text: errorLabel.text
-        title: "Error"
+        title: qsTr("No se pudo completar la acción")
         anchors.centerIn: parent
         modal: true
         standardButtons: Dialog.Ok
-        width: Math.min(root.width - 40, 400)
-
-        contentItem: Column {
-            spacing: 10
-            Label {
-                id: errorLabel
-                width: parent.width
-                wrapMode: Text.WordWrap
-            }
+        width: Math.min(root.width - 40, 420)
+        Label {
+            id: errorLabel
+            width: parent.width
+            wrapMode: Text.WordWrap
         }
     }
 
-    Component.onCompleted: {
-        estudianteViewModel.loadMaterias()
-        estudianteViewModel.loadActividades()
-    }
+    Component.onCompleted: reload()
 }

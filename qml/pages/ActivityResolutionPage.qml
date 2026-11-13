@@ -1,39 +1,22 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
+import "../components"
 
-Item {
+Page {
     id: root
+    background: Rectangle { color: Theme.background }
+
+    header: PageHeader {
+        title: estudianteViewModel.currentActivityTitle
+        subtitle: estudianteViewModel.currentActivityDescription
+    }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
         spacing: 20
-
-        // Header
-        RowLayout {
-            Layout.fillWidth: true
-            
-            Button {
-                text: "← Volver"
-                onClicked: stackView.pop()
-                flat: true
-            }
-
-            Label {
-                text: estudianteViewModel.currentActivityTitle
-                font.pixelSize: 24
-                font.bold: true
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-            }
-
-            Label {
-                text: "Tiempo: 10:00" // Hardcoded for now
-                font.pixelSize: 18
-                color: "#e74c3c"
-            }
-        }
 
         // Questions List
         ListView {
@@ -121,7 +104,7 @@ Item {
             Layout.preferredHeight: 50
             
             background: Rectangle {
-                color: "#2ecc71"
+                color: Theme.success
                 radius: 25
             }
             

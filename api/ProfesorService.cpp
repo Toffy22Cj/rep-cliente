@@ -1,4 +1,5 @@
 #include "ProfesorService.h"
+#include "HttpClient.h"
 #include "ApiConfig.h"
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -14,12 +15,7 @@ ProfesorService::ProfesorService(QObject *parent)
 
 QNetworkRequest ProfesorService::createRequest(const QUrl &url, const QString &token)
 {
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    if (!token.isEmpty()) {
-        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
-    }
-    return request;
+    return HttpClient::jsonRequest(url, token);
 }
 
 void ProfesorService::fetchDashboardData(const QString &token)
@@ -29,7 +25,7 @@ void ProfesorService::fetchDashboardData(const QString &token)
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -54,28 +50,28 @@ void ProfesorService::fetchDashboardData(const QString &token)
 void ProfesorService::fetchMateriasAsignadas(const QString &token)
 {
     QUrl url(ApiConfig::baseUrl() + "/profesor/materias");
-    qDebug() << "Fetching materias from:" << url.toString();
+    qCDebug(lcApi) << "Fetching materias from:" << url.toString();
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "Error fetching materias:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            qCDebug(lcApi) << "Error fetching materias:" << reply->errorString();
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QByteArray data = reply->readAll();
-        qDebug() << "Materias raw JSON:" << data;
+        qCDebug(lcApi) << "Materias raw JSON:" << data;
 
         QList<MateriaAsignadaDTO> materias;
         QJsonArray array = QJsonDocument::fromJson(data).array();
-        qDebug() << "Parsed JSON array size:" << array.size();
+        qCDebug(lcApi) << "Parsed JSON array size:" << array.size();
 
         for (const auto &mVal : array) {
             QJsonObject obj = mVal.toObject();
             materias.append({obj["id"].toVariant().toLongLong(), obj["nombre"].toString()});
         }
-        qDebug() << "Emitting materiasAsignadasFetched with size:" << materias.size();
+        qCDebug(lcApi) << "Emitting materiasAsignadasFetched with size:" << materias.size();
         emit materiasAsignadasFetched(materias);
     });
 }
@@ -83,22 +79,22 @@ void ProfesorService::fetchMateriasAsignadas(const QString &token)
 void ProfesorService::fetchCursos(const QString &token)
 {
     QUrl url(ApiConfig::baseUrl() + "/profesor/cursos");
-    qDebug() << "Fetching cursos from:" << url.toString();
+    qCDebug(lcApi) << "Fetching cursos from:" << url.toString();
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "Error fetching cursos:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            qCDebug(lcApi) << "Error fetching cursos:" << reply->errorString();
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QByteArray data = reply->readAll();
-        qDebug() << "Cursos raw JSON:" << data;
+        qCDebug(lcApi) << "Cursos raw JSON:" << data;
 
         QList<CursoDTO> cursos;
         QJsonArray array = QJsonDocument::fromJson(data).array();
-        qDebug() << "Parsed Cursos array size:" << array.size();
+        qCDebug(lcApi) << "Parsed Cursos array size:" << array.size();
 
         for (const auto &cVal : array) {
             QJsonObject obj = cVal.toObject();
@@ -109,7 +105,7 @@ void ProfesorService::fetchCursos(const QString &token)
                 obj["grupo"].toString()
             });
         }
-        qDebug() << "Emitting cursosFetched with size:" << cursos.size();
+        qCDebug(lcApi) << "Emitting cursosFetched with size:" << cursos.size();
         emit cursosFetched(cursos);
     });
 }
@@ -121,7 +117,7 @@ void ProfesorService::fetchActividades(long long materiaId, long long cursoId, c
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -155,7 +151,7 @@ void ProfesorService::fetchRespuestas(long long actividadId, const QString &toke
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -183,7 +179,7 @@ void ProfesorService::calificarRespuesta(long long respuestaId, float nota, cons
     connect(reply, &QNetworkReply::finished, this, [this, reply, respuestaId, nota]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         emit respuestaCalificada(respuestaId, nota);
@@ -193,22 +189,22 @@ void ProfesorService::calificarRespuesta(long long respuestaId, float nota, cons
 void ProfesorService::fetchEstudiantes(long long cursoId, const QString &token)
 {
     QUrl url(ApiConfig::baseUrl() + QString("/profesor/estudiantes/curso/%1").arg(cursoId));
-    qDebug() << "Fetching estudiantes for curso" << cursoId << "from:" << url.toString();
+    qCDebug(lcApi) << "Fetching estudiantes for curso" << cursoId << "from:" << url.toString();
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "Error fetching estudiantes:" << reply->errorString();
-            emit errorOccurred(reply->errorString());
+            qCDebug(lcApi) << "Error fetching estudiantes:" << reply->errorString();
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QByteArray data = reply->readAll();
-        qDebug() << "Estudiantes raw JSON:" << data;
+        qCDebug(lcApi) << "Estudiantes raw JSON:" << data;
 
         QList<EstudianteSimplificadoDTO> estudiantes;
         QJsonArray array = QJsonDocument::fromJson(data).array();
-        qDebug() << "Parsed Estudiantes array size:" << array.size();
+        qCDebug(lcApi) << "Parsed Estudiantes array size:" << array.size();
 
         for (const auto &v : array) {
             QJsonObject obj = v.toObject();
@@ -219,7 +215,7 @@ void ProfesorService::fetchEstudiantes(long long cursoId, const QString &token)
                 obj["correo"].toString()
             });
         }
-        qDebug() << "Emitting estudiantesFetched with size:" << estudiantes.size();
+        qCDebug(lcApi) << "Emitting estudiantesFetched with size:" << estudiantes.size();
         emit estudiantesFetched(estudiantes);
     });
 }
@@ -232,7 +228,7 @@ void ProfesorService::fetchAsistencia(long long cursoId, long long materiaId, co
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -272,7 +268,7 @@ void ProfesorService::saveAsistencia(long long cursoId, long long materiaId, con
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             emit asistenciaSaved(false);
             return;
         }
@@ -296,7 +292,7 @@ void ProfesorService::crearActividad(const ActividadCreateDTO &actividat, const 
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         QJsonObject res = QJsonDocument::fromJson(reply->readAll()).object();
@@ -320,7 +316,7 @@ void ProfesorService::actualizarActividad(long long id, const ActividadCreateDTO
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             emit actividadActualizada(false);
             return;
         }
@@ -349,7 +345,7 @@ void ProfesorService::crearPregunta(const PreguntaRequestDTO &pregunta, const QS
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
         QJsonObject res = QJsonDocument::fromJson(reply->readAll()).object();
@@ -366,13 +362,13 @@ void Rep::ProfesorService::fetchPromedios(long long cursoId, long long materiaId
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QList<ReportePromedioDTO> promedios;
         QByteArray rawData = reply->readAll();
-        qDebug() << "Promedios RAW JSON:" << rawData;
+        qCDebug(lcApi) << "Promedios RAW JSON:" << rawData;
         
         QJsonDocument doc = QJsonDocument::fromJson(rawData);
         if (doc.isArray()) {
@@ -413,13 +409,13 @@ void Rep::ProfesorService::fetchEntregas(long long actividadId, const QString &t
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QList<ReporteEntregaDTO> entregas;
         QByteArray rawData = reply->readAll();
-        qDebug() << "Entregas JSON:" << rawData;
+        qCDebug(lcApi) << "Entregas JSON:" << rawData;
         QJsonArray array = QJsonDocument::fromJson(rawData).array();
         
         // Expected format from backend List<Object[]> for "Entregas":
@@ -478,7 +474,7 @@ void Rep::ProfesorService::fetchEstadisticasActividad(long long actividadId, con
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
@@ -501,7 +497,7 @@ void Rep::ProfesorService::exportPromedios(long long cursoId, long long materiaI
     connect(reply, &QNetworkReply::finished, this, [this, reply, cursoId, materiaId]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) {
-            emit errorOccurred(reply->errorString());
+            emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 

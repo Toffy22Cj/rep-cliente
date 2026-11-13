@@ -29,15 +29,19 @@ public:
     // Materias
     void fetchMaterias(const QString &token);
     void createMateria(const MateriaAdminDTO &materia, const QString &token);
+    void updateMateria(const MateriaAdminDTO &materia, const QString &token);
     void deleteMateria(long long id, const QString &token);
 
-    // Asignaciones (Basic support)
+    // Asignaciones
     void fetchAsignaciones(const QString &token);
+    void createAsignacion(long long profesorId, long long materiaId, long long cursoId, const QString &token);
+    void deleteAsignacion(long long id, const QString &token);
 
 signals:
     void usuariosFetched(const QList<UsuarioDTO> &usuarios);
     void cursosFetched(const QList<CursoAdminDTO> &cursos);
     void materiasFetched(const QList<MateriaAdminDTO> &materias);
+    void asignacionesFetched(const QList<AsignacionDTO> &asignaciones);
     
     void operationSuccess(const QString &message);
     void errorOccurred(const QString &error);

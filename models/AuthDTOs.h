@@ -7,11 +7,12 @@
 namespace Rep {
 
 struct AuthUsuarioDTO {
-    long long id;
+    long long id = 0;
     QString nombre;
+    QString apellido;
     QString correo;
     QString identificacion;
-    Rol rol;
+    Rol rol = Rol::ESTUDIANTE;
 };
 
 struct LoginRequest {
@@ -23,7 +24,7 @@ struct LoginResponse {
     AuthUsuarioDTO usuario;
     QString token;
     QString mensaje;
-    bool success;
+    bool success = false;
 };
 
 } // namespace Rep

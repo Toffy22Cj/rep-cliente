@@ -1,4 +1,5 @@
 #include "ProfesorViewModel.h"
+#include "../api/HttpClient.h"
 #include "../core/SessionManager.h"
 
 namespace Rep {
@@ -30,13 +31,13 @@ ProfesorViewModel::ProfesorViewModel(QObject *parent)
     });
 
     connect(m_service, &ProfesorService::materiasAsignadasFetched, this, [this](const QList<MateriaAsignadaDTO> &materias) {
-        qDebug() << "ViewModel received materias size:" << materias.size();
+        qCDebug(lcApi) << "ViewModel received materias size:" << materias.size();
         QList<MateriaDTO> list;
         for (const auto &m : materias) {
             list.append({m.id, m.nombre});
         }
         m_materiaModel->setMaterias(list);
-        qDebug() << "MateriaModel updated. New COUNT:" << m_materiaModel->rowCount();
+        qCDebug(lcApi) << "MateriaModel updated. New COUNT:" << m_materiaModel->rowCount();
         m_isLoading = false;
         emit isLoadingChanged();
     });
@@ -54,7 +55,7 @@ ProfesorViewModel::ProfesorViewModel(QObject *parent)
     });
 
     connect(m_service, &ProfesorService::estudiantesFetched, this, [this](const QList<EstudianteSimplificadoDTO> &estudiantes) {
-        qDebug() << "ViewModel received estudiantes size:" << estudiantes.size();
+        qCDebug(lcApi) << "ViewModel received estudiantes size:" << estudiantes.size();
         QVariantList list;
         for (const auto &e : estudiantes) {
             QVariantMap map;

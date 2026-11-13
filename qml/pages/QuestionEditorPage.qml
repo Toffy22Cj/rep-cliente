@@ -1,29 +1,15 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Editor de Preguntas"
     property var actividadId: 0
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "\u2190"
-                onClicked: stackView.pop()
-            }
-            Label {
-                text: "Preguntas de la Actividad"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
-            }
-            Item { Layout.fillWidth: true }
-        }
-    }
+    header: PageHeader { title: "Preguntas de la Actividad" }
 
     ColumnLayout {
         anchors.fill: parent
@@ -39,9 +25,9 @@ Page {
         Rectangle {
             Layout.fillWidth: true
             height: 250
-            color: "#f8f9fa"
+            color: Theme.surfaceAlt
             radius: 8
-            border.color: "#dee2e6"
+            border.color: Theme.border
 
             ColumnLayout {
                 anchors.fill: parent

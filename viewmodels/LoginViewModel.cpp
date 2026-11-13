@@ -12,10 +12,7 @@ LoginViewModel::LoginViewModel(QObject *parent)
 
         if (response.success) {
             SessionManager::instance().setSession(response.usuario, response.token);
-            QString roleStr = "ESTUDIANTE";
-            if (response.usuario.rol == Rol::PROFESOR) roleStr = "PROFESOR";
-            else if (response.usuario.rol == Rol::ADMIN) roleStr = "ADMIN";
-            emit loginSuccess(roleStr);
+            emit loginSuccess(SessionManager::roleToString(response.usuario.rol));
         } else {
             m_errorMessage = response.mensaje;
             emit errorMessageChanged();

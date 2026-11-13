@@ -17,7 +17,8 @@
 *.qm
 .#*
 *.*#
-core
+# volcados de memoria (no ignorar el directorio core/ del proyecto)
+core.[0-9]*
 !core/
 tags
 .DS_Store
@@ -80,3 +81,7 @@ CMakeLists.txt.user*
 .rcc/
 .uic/
 /build*/
+
+# Builds locales
+build/
+build-*/

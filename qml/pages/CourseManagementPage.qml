@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Gestión de Cursos"
-    background: Rectangle { color: "#f4f6f9" }
+    background: Rectangle { color: Theme.background }
     property var stackView: StackView.view
 
     Component.onCompleted: adminViewModel.loadCursos()
@@ -19,18 +20,7 @@ Page {
         }
     }
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: "←"
-                onClicked: stackView.pop()
-                contentItem: Text { text: "←"; color: "white"; font.pixelSize: 24; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-            }
-            Label { text: "Gestión de Cursos"; color: "white"; font.bold: true; font.pixelSize: 18 }
-        }
-    }
+    header: PageHeader { title: "Gestión de Cursos" }
 
     ColumnLayout {
         anchors.fill: parent
@@ -40,7 +30,7 @@ Page {
         Button {
             text: "+ Nuevo Curso"
             highlighted: true
-            onClicked: createDialog.open()
+            onClicked: createDialog.openCreate()
         }
 
         ListView {
@@ -56,7 +46,7 @@ Page {
                 height: 60
                 color: "white"
                 radius: 8
-                border.color: "#ecf0f1"
+                border.color: Theme.border
 
                 RowLayout {
                     anchors.fill: parent
@@ -65,7 +55,7 @@ Page {
 
                     Rectangle {
                         width: 30; height: 30; radius: 15
-                        color: "#e67e22"
+                        color: Theme.warning
                         Label { anchors.centerIn: parent; text: "🎓"; }
                     }
 
@@ -74,6 +64,12 @@ Page {
                         font.bold: true
                         font.pixelSize: 16
                         Layout.fillWidth: true
+                    }
+
+                    Button {
+                        text: "✏️"
+                        flat: true
+                        onClicked: createDialog.openEdit(model.id, model.grado, model.grupo)
                     }
 
                     Button {
@@ -91,28 +87,51 @@ Page {
         anchors.centerIn: parent
         width: 300
         modal: true
-        title: "Nuevo Curso"
+        title: editMode ? "Editar Curso" : "Nuevo Curso"
         standardButtons: Dialog.Save | Dialog.Cancel
+
+        property bool editMode: false
+        property int editId: 0
+
+        function openCreate() {
+            editMode = false
+            editId = 0
+            gradoField.text = ""
+            grupoField.text = ""
+            open()
+        }
+
+        function openEdit(id, grado, grupo) {
+            editMode = true
+            editId = id
+            gradoField.text = grado
+            grupoField.text = grupo
+            open()
+        }
 
         ColumnLayout {
             width: parent.width
             spacing: 15
-            
-            TextField { 
+
+            TextField {
                 id: gradoField
-                placeholderText: "Grado (Ej: 11)" 
+                placeholderText: "Grado (Ej: 11)"
                 validator: IntValidator { bottom: 1; top: 12 }
-                Layout.fillWidth: true 
+                Layout.fillWidth: true
             }
-            TextField { 
+            TextField {
                 id: grupoField
-                placeholderText: "Grupo (Ej: A)" 
-                Layout.fillWidth: true 
+                placeholderText: "Grupo (Ej: A)"
+                Layout.fillWidth: true
             }
         }
 
         onAccepted: {
-            adminViewModel.createCurso(parseInt(gradoField.text), grupoField.text)
+            if (editMode) {
+                adminViewModel.updateCurso(editId, parseInt(gradoField.text), grupoField.text)
+            } else {
+                adminViewModel.createCurso(parseInt(gradoField.text), grupoField.text)
+            }
             gradoField.clear(); grupoField.clear()
         }
     }

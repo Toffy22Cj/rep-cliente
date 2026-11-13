@@ -1,48 +1,23 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import Rep
 import "../components"
 
 Page {
     id: root
     title: "Reportes"
-    background: Rectangle { color: "#f4f6f9" }
+    background: Rectangle { color: Theme.background }
 
     property var stackView: StackView.view
-    property color primaryColor: "#3498db"
+    property color primaryColor: Theme.primary
 
     Component.onCompleted: {
         profesorViewModel.loadMaterias()
         profesorViewModel.loadCursos()
     }
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            spacing: 15
-            ToolButton {
-                text: "←"
-                font.pixelSize: 20
-                onClicked: stackView.pop()
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    font.pixelSize: 24
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            Label {
-                text: "Reportes y Estadísticas"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
-                Layout.fillWidth: true
-            }
-        }
-    }
+    header: PageHeader { title: "Reportes y Estadísticas" }
 
     ColumnLayout {
         anchors.fill: parent
@@ -53,8 +28,9 @@ Page {
             id: reportTabs
             Layout.fillWidth: true
             
-            TabButton { text: "Promedios por Curso" }
-            TabButton { text: "Estadísticas de Actividad" }
+            background: Rectangle { color: Theme.surface; radius: Theme.radiusM }
+            AppTabButton { text: qsTr("Promedios por curso") }
+            AppTabButton { text: qsTr("Estadísticas de actividad") }
         }
 
         StackLayout {
@@ -81,7 +57,7 @@ Page {
                             spacing: 20
 
                             ColumnLayout {
-                                Label { text: "Materia"; font.bold: true; color: "#7f8c8d" }
+                                Label { text: "Materia"; font.bold: true; color: Theme.textSecondary }
                                 ComboBox {
                                     id: materiaCombo
                                     model: profesorViewModel.materiaModel
@@ -92,7 +68,7 @@ Page {
                             }
 
                             ColumnLayout {
-                                Label { text: "Curso"; font.bold: true; color: "#7f8c8d" }
+                                Label { text: "Curso"; font.bold: true; color: Theme.textSecondary }
                                 ComboBox {
                                     id: cursoCombo
                                     model: profesorViewModel.cursoModel
@@ -135,7 +111,7 @@ Page {
                         header: Rectangle {
                             width: parent.width
                             height: 40
-                            color: "#ecf0f1"
+                            color: Theme.border
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 20
@@ -160,7 +136,7 @@ Page {
                                     Layout.preferredWidth: 60
                                     Layout.preferredHeight: 30
                                     radius: 15
-                                    color: model.promedio >= 3.0 ? "#2ecc71" : "#e74c3c"
+                                    color: model.promedio >= 3.0 ? Theme.success : Theme.danger
                                     Label {
                                         anchors.centerIn: parent
                                         text: model.promedio.toFixed(1)
@@ -193,7 +169,7 @@ Page {
                             spacing: 20
 
                             ColumnLayout {
-                                Label { text: "Materia"; font.bold: true; color: "#7f8c8d" }
+                                Label { text: "Materia"; font.bold: true; color: Theme.textSecondary }
                                 ComboBox {
                                     id: statMateriaCombo
                                     model: profesorViewModel.materiaModel
@@ -204,7 +180,7 @@ Page {
                             }
 
                             ColumnLayout {
-                                Label { text: "Curso"; font.bold: true; color: "#7f8c8d" }
+                                Label { text: "Curso"; font.bold: true; color: Theme.textSecondary }
                                 ComboBox {
                                     id: statCursoCombo
                                     model: profesorViewModel.cursoModel
@@ -215,7 +191,7 @@ Page {
                             }
                             
                             ColumnLayout {
-                                Label { text: "Actividad"; font.bold: true; color: "#7f8c8d" }
+                                Label { text: "Actividad"; font.bold: true; color: Theme.textSecondary }
                                 ComboBox {
                                     id: actividadCombo
                                     model: profesorViewModel.actividadModel
@@ -237,28 +213,28 @@ Page {
                             title: "Promedio"
                             value: reportsViewModel.statPromedio.toFixed(1)
                             icon: "📊"
-                            color: "#3498db"
+                            color: Theme.primary
                             Layout.fillWidth: true
                         }
                          StatCard { 
                             title: "Nota Máxima"
                             value: reportsViewModel.statMaxima.toFixed(1)
                             icon: "🏆"
-                            color: "#2ecc71"
+                            color: Theme.success
                             Layout.fillWidth: true
                         }
                          StatCard { 
                             title: "Nota Mínima"
                             value: reportsViewModel.statMinima.toFixed(1)
                             icon: "⚠️"
-                            color: "#e74c3c"
+                            color: Theme.danger
                             Layout.fillWidth: true
                         }
                          StatCard { 
                             title: "Entregas"
                             value: reportsViewModel.statTotalEntregas + "/" + reportsViewModel.statTotalEstudiantes
                             icon: "📥"
-                            color: "#f1c40f"
+                            color: Theme.warning
                             Layout.fillWidth: true
                         }
                     }
@@ -289,7 +265,7 @@ Page {
                          header: Rectangle {
                             width: parent.width
                             height: 40
-                            color: "#ecf0f1"
+                            color: Theme.border
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 20
@@ -313,7 +289,7 @@ Page {
                                 Label { text: model.estudiante; Layout.fillWidth: true }
                                 Label { 
                                     text: model.estado
-                                    color: model.estado === "ENTREGADO" ? "#2ecc71" : "#e74c3c"
+                                    color: model.estado === "ENTREGADO" ? Theme.success : Theme.danger
                                     font.bold: true 
                                     Layout.preferredWidth: 100
                                 }

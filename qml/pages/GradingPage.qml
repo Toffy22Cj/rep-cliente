@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material
+import Rep
+import "../components"
 
 Page {
     id: root
     title: "Calificar Entregas"
-    background: Rectangle { color: "#f4f6f9" }
+    background: Rectangle { color: Theme.background }
 
     property var stackView: StackView.view
     property int actividadId: 0
@@ -28,32 +29,7 @@ Page {
         }
     }
 
-    header: ToolBar {
-        background: Rectangle { color: "#2c3e50" }
-        RowLayout {
-            anchors.fill: parent
-            spacing: 15
-            ToolButton {
-                text: "←"
-                font.pixelSize: 20
-                onClicked: stackView.pop()
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    font.pixelSize: 24
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            Label {
-                text: actividadTitulo
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
-                Layout.fillWidth: true
-            }
-        }
-    }
+    header: PageHeader { title: actividadTitulo }
 
     ColumnLayout {
         anchors.fill: parent
@@ -64,7 +40,7 @@ Page {
             text: "Listado de Entregas"
             font.bold: true
             font.pixelSize: 18
-            color: "#2c3e50"
+            color: Theme.textPrimary
         }
 
         ListView {
@@ -80,7 +56,7 @@ Page {
                 height: 80
                 color: "white"
                 radius: 8
-                border.color: "#ecf0f1"
+                border.color: Theme.border
                 border.width: 1
 
                 RowLayout {
@@ -91,7 +67,7 @@ Page {
                     // Avatar
                     Rectangle {
                         width: 40; height: 40; radius: 20
-                        color: "#3498db"
+                        color: Theme.primary
                         Label {
                             anchors.centerIn: parent
                             text: model.estudiante ? model.estudiante.charAt(0).toUpperCase() : "?"
@@ -108,11 +84,11 @@ Page {
                             text: model.estudiante
                             font.bold: true
                             font.pixelSize: 16
-                            color: "#2c3e50"
+                            color: Theme.textPrimary
                         }
                         Label { 
                             text: model.fecha !== "---" ? "Entregado: " + model.fecha : "Pendiente"
-                            color: model.fecha !== "---" ? "#27ae60" : "#95a5a6"
+                            color: model.fecha !== "---" ? Theme.successDark : Theme.textMuted
                             font.pixelSize: 13
                         }
                     }
@@ -121,7 +97,7 @@ Page {
                     Rectangle {
                         visible: model.calificada
                         width: 50; height: 30; radius: 15
-                        color: model.nota >= 3.0 ? "#27ae60" : "#c0392b"
+                        color: model.nota >= 3.0 ? Theme.successDark : Theme.dangerDark
                         Label {
                             anchors.centerIn: parent
                             text: model.nota.toFixed(1)
@@ -195,8 +171,9 @@ Page {
         id: successDialog
         anchors.centerIn: parent
         modal: true
-        title: "Éxito"
-        Label { text: "Calificación guardada correctamente." }
+        title: qsTr("Éxito")
+        width: 360
+        Label { text: qsTr("Calificación guardada correctamente."); wrapMode: Text.WordWrap; width: parent.width }
         standardButtons: Dialog.Ok
     }
 }
