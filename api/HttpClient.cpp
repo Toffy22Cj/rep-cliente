@@ -1,6 +1,10 @@
 #include "HttpClient.h"
 #include "ApiConfig.h"
 #include "../core/SessionManager.h"
+#include "../core/AlmacenLocal.h"
+#include "../core/Sincronizacion.h"
+
+#include <QCoreApplication>
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -8,6 +12,40 @@
 Q_LOGGING_CATEGORY(lcApi, "rep.api", QtInfoMsg)
 
 namespace Rep::HttpClient {
+
+QNetworkAccessManager *red()
+{
+    static QNetworkAccessManager *nam = []() {
+        auto *m = new QNetworkAccessManager(QCoreApplication::instance());
+        QObject::connect(m, &QNetworkAccessManager::finished, m, [](QNetworkReply *reply) {
+            Sincronizacion::instance().registrar(reply);
+        });
+        return m;
+    }();
+    return nam;
+}
+
+static QString claveDe(const QNetworkReply *reply)
+{
+    const QUrl url = reply->request().url();
+    return url.path() + (url.hasQuery() ? QLatin1Char('?') + url.query() : QString());
+}
+
+bool leerConRespaldo(QNetworkReply *reply, QByteArray &cuerpo)
+{
+    if (reply->error() == QNetworkReply::NoError) {
+        cuerpo = reply->readAll();
+        AlmacenLocal::guardar(claveDe(reply), cuerpo);
+        return true;
+    }
+    if (Sincronizacion::esSinConexion(reply)) {
+        if (auto copia = AlmacenLocal::leer(claveDe(reply))) {
+            cuerpo = *copia;
+            return true;
+        }
+    }
+    return false;
+}
 
 QNetworkRequest jsonRequest(const QUrl &url, const QString &token)
 {
@@ -61,7 +99,7 @@ QString errorMessage(QNetworkReply *reply)
         return serverMessage;
 
     switch (status) {
-    case 0:   return QStringLiteral("No se pudo conectar con el servidor (%1).").arg(ApiConfig::baseUrl());
+    case 0:   return QStringLiteral("Sin conexión con el servidor (%1). Los datos guardados no incluyen esta información todavía.").arg(ApiConfig::baseUrl());
     case 400: return QStringLiteral("La solicitud contiene datos no válidos.");
     case 401: return QStringLiteral("Credenciales inválidas.");
     case 403: return QStringLiteral("No tiene permisos para realizar esta acción.");

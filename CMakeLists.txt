@@ -21,6 +21,8 @@ set(HEADERS
     api/ProfesorService.h
     api/AdminService.h
     core/SessionManager.h
+    core/AlmacenLocal.h
+    core/Sincronizacion.h
     core/security/ICredentialStore.h
     core/security/SecureTokenStorage.h
     core/security/QtKeychainCredentialStore.h
@@ -51,6 +53,8 @@ set(SOURCES
     api/EstudianteService.cpp
     api/ProfesorService.cpp
     api/AdminService.cpp
+    core/AlmacenLocal.cpp
+    core/Sincronizacion.cpp
     core/security/SecureTokenStorage.cpp
     core/security/QtKeychainCredentialStore.cpp
     models/PreguntaModel.cpp
@@ -78,6 +82,8 @@ set(QML_FILES
     qml/components/AppTextField.qml
     qml/components/Avatar.qml
     qml/components/Badge.qml
+    qml/components/BannerConexion.qml
+    qml/components/Toast.qml
     qml/components/Card.qml
     qml/components/DatePicker.qml
     qml/components/EmptyState.qml
@@ -101,6 +107,10 @@ set(QML_FILES
     qml/pages/SubjectManagementPage.qml
     qml/pages/AssignmentsManagementPage.qml
     qml/pages/MaterialPage.qml
+    qml/pages/PerfilPage.qml
+    qml/pages/RegistroPage.qml
+    qml/pages/MisNotasPage.qml
+    qml/pages/PlanillaNotasPage.qml
 )
 
 qt_add_qml_module(appRep

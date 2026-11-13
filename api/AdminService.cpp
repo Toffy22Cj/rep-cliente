@@ -9,7 +9,7 @@
 namespace Rep {
 
 AdminService::AdminService(QObject *parent)
-    : QObject(parent), m_networkManager(new QNetworkAccessManager(this))
+    : QObject(parent), m_networkManager(HttpClient::red())
 {
 }
 
@@ -26,13 +26,14 @@ void AdminService::fetchUsuarios(const QString &token)
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
+        QByteArray cuerpo;
+        if (!HttpClient::leerConRespaldo(reply, cuerpo)) {
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QList<UsuarioDTO> usuarios;
-        QJsonArray array = QJsonDocument::fromJson(reply->readAll()).array();
+        QJsonArray array = QJsonDocument::fromJson(cuerpo).array();
         for (const auto &val : array) {
             QJsonObject obj = val.toObject();
             UsuarioDTO u;
@@ -106,13 +107,14 @@ void AdminService::fetchCursos(const QString &token)
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
+        QByteArray cuerpo;
+        if (!HttpClient::leerConRespaldo(reply, cuerpo)) {
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QList<CursoAdminDTO> cursos;
-        QJsonArray array = QJsonDocument::fromJson(reply->readAll()).array();
+        QJsonArray array = QJsonDocument::fromJson(cuerpo).array();
         for (const auto &val : array) {
             QJsonObject obj = val.toObject();
             CursoAdminDTO c;
@@ -183,13 +185,14 @@ void AdminService::fetchMaterias(const QString &token)
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
+        QByteArray cuerpo;
+        if (!HttpClient::leerConRespaldo(reply, cuerpo)) {
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
         QList<MateriaAdminDTO> materias;
-        QJsonArray array = QJsonDocument::fromJson(reply->readAll()).array();
+        QJsonArray array = QJsonDocument::fromJson(cuerpo).array();
         for (const auto &val : array) {
             QJsonObject obj = val.toObject();
             MateriaAdminDTO m;
@@ -259,12 +262,13 @@ void AdminService::fetchAsignaciones(const QString &token)
     QNetworkReply *reply = m_networkManager->get(createRequest(url, token));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
+        QByteArray cuerpo;
+        if (!HttpClient::leerConRespaldo(reply, cuerpo)) {
             emit errorOccurred(HttpClient::errorMessage(reply));
             return;
         }
 
-        QByteArray data = reply->readAll();
+        QByteArray data = cuerpo;
         qCDebug(lcApi) << "fetchAsignaciones JSON:" << data;
 
         QList<AsignacionDTO> asignaciones;

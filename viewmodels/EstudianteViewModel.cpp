@@ -38,6 +38,13 @@ EstudianteViewModel::EstudianteViewModel(QObject *parent)
         emit activitySubmitted(true, QString("Actividad enviada con éxito. Nota: %1").arg(resultado.nota));
     });
 
+    connect(m_service, &EstudianteService::actividadEncolada, this, [this](long long) {
+        endRequest();
+        emit activitySubmitted(true, tr("Sin conexión: tu entrega quedó guardada en este equipo y se enviará "
+                                        "automáticamente cuando vuelva la conexión. Si el plazo vence antes, "
+                                        "el servidor podría rechazarla."));
+    });
+
     // HttpClient ya traduce el error (incluido el mensaje del servidor y la sesión expirada)
     connect(m_service, &EstudianteService::errorOccurred, this, [this](const QString &error) {
         endRequest();

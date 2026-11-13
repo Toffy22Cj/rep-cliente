@@ -25,6 +25,7 @@ signals:
     void actividadesFetched(const QList<ActividadDTO> &actividades);
     void actividadConPreguntasFetched(const ActividadConPreguntasDTO &actividad);
     void actividadResuelta(const ResultadoActividadDTO &resultado);
+    void actividadEncolada(long long actividadId);
     void errorOccurred(const QString &error);
 
 private:

@@ -13,7 +13,15 @@ Page {
     
     ListModel { id: studentsModel }
     
-    header: PageHeader { title: "Estudiantes - " + (cursoNombre || "Curso " + cursoId) }
+    header: PageHeader {
+        title: qsTr("Estudiantes · %1").arg(root.cursoNombre || root.cursoId)
+        AppButton {
+            text: qsTr("⬇ Exportar CSV")
+            variant: "secondary"
+            enabled: root.cursoId > 0
+            onClicked: api.abrir("/api/profesor/estudiantes/curso/" + root.cursoId + "/export")
+        }
+    }
     
     ColumnLayout {
         anchors.fill: parent
@@ -105,7 +113,6 @@ Page {
     }
     
     Component.onCompleted: {
-        console.log("StudentsPage loaded for curso:", cursoId)
         if (cursoId > 0) {
             profesorViewModel.loadEstudiantes(cursoId)
         } else {

@@ -2,6 +2,7 @@
 #define HTTPCLIENT_H
 
 #include <QLoggingCategory>
+#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QString>
@@ -22,6 +23,20 @@ namespace Rep {
  * errores, que antes estaban duplicadas en cada servicio.
  */
 namespace HttpClient {
+
+/**
+ * Gestor de red compartido por toda la aplicación (reutiliza conexiones HTTP y
+ * actualiza el estado de conexión de Sincronizacion con cada respuesta).
+ */
+QNetworkAccessManager *red();
+
+/**
+ * Cuerpo de una respuesta GET con respaldo sin conexión:
+ *  - Respuesta correcta: devuelve el cuerpo y lo guarda en el almacén local.
+ *  - Sin conexión con el servidor: devuelve la última copia guardada, si existe.
+ * Devuelve false si no hay datos (el error se obtiene con errorMessage()).
+ */
+bool leerConRespaldo(QNetworkReply *reply, QByteArray &cuerpo);
 
 /** Petición JSON con cabecera Authorization: Bearer (si hay token). */
 QNetworkRequest jsonRequest(const QUrl &url, const QString &token);
