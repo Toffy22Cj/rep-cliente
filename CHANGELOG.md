@@ -1,5 +1,13 @@
 # Changelog — REP Cliente (Qt 6 / QML)
 
+## [0.2.1] — 2026-11-13
+- Dashboard del profesor: aviso cuando no tiene materias asignadas, con instrucciones.
+- Logs de red en la categoría `rep.api`, silenciosa por defecto
+  (`QT_LOGGING_RULES="rep.api.debug=true"` para depurar).
+- Compatible con el nuevo formato de errores del backend (`ApiError` con `code` y
+  `message`): se muestra el mensaje del servidor, p. ej. «La tarjeta de identidad (TI)
+  debe tener exactamente 10 dígitos (tiene 6)».
+
 ## [0.2.0] — 2026-11-12 · Refactorización, corrección de errores y rediseño
 
 ### Seguridad
