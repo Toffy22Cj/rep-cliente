@@ -17,12 +17,14 @@ Page {
     background: Rectangle { color: Theme.background }
     header: PageHeader {
         title: qsTr("Mis notas")
-        subtitle: root.boletin ? qsTr("Curso %1 · actualizado %2").arg(root.boletin.curso)
+        subtitle: root.boletin ? qsTr("Curso %1 · %2 · actualizado %3").arg(root.boletin.curso)
+                                 .arg(root.boletin.periodo ? root.boletin.periodo.nombre : root.boletin.ponderado ? qsTr("año completo") : qsTr("todas las actividades"))
                                  .arg(Qt.formatDateTime(new Date(root.boletin.generadoEn), "dd/MM HH:mm")) : ""
+        SelectorPeriodo { id: selector; onCambiado: root.cargar() }
         AppButton {
             text: qsTr("⬇ Boletín PDF")
             variant: "secondary"
-            onClicked: api.abrir("/api/estudiante/" + sessionManager.userId + "/notas/pdf")
+            onClicked: api.abrir("/api/estudiante/" + sessionManager.userId + "/notas/pdf" + selector.parametro("?"))
         }
         AppButton {
             text: qsTr("↻ Actualizar")
@@ -34,7 +36,7 @@ Page {
     ApiRequests { id: requests }
 
     function cargar() {
-        requests.get("/estudiante/" + sessionManager.userId + "/notas",
+        requests.get("/estudiante/" + sessionManager.userId + "/notas" + selector.parametro("?"),
                      datos => { boletin = datos; error = "" },
                      mensaje => { error = mensaje })
     }
@@ -143,6 +145,7 @@ Page {
                                           + qsTr("%n pendiente(s)", "", tarjeta.modelData.pendientes) + " · "
                                           + (tarjeta.noEntregadas > 0 ? qsTr("%n sin entregar", "", tarjeta.noEntregadas) + " · " : "")
                                           + qsTr("%n falta(s)", "", tarjeta.modelData.asistencia.ausencias)
+                                          + (tarjeta.modelData.asistencia.retardos > 0 ? " · " + qsTr("%n retardo(s)", "", tarjeta.modelData.asistencia.retardos) : "")
                                     color: Theme.textSecondary
                                     font.pixelSize: Theme.fontCaption
                                     wrapMode: Text.WordWrap
@@ -173,6 +176,22 @@ Page {
                                     const e = Object.assign({}, root.expandidas)
                                     e[tarjeta.modelData.materiaId] = !tarjeta.abierta
                                     root.expandidas = e
+                                }
+                            }
+                        }
+
+                        // Nota de cada periodo (solo en la vista de año completo)
+                        Flow {
+                            Layout.fillWidth: true
+                            visible: tarjeta.modelData.periodos && tarjeta.modelData.periodos.length > 0
+                            spacing: Theme.spacingS
+                            Repeater {
+                                model: tarjeta.modelData.periodos || []
+                                delegate: Badge {
+                                    required property var modelData
+                                    text: modelData.nombre + " (" + modelData.porcentaje + " %): " + root.nota(modelData.promedio)
+                                    tint: modelData.promedio === null ? Theme.textMuted : root.colorNota(modelData.promedio)
+                                    softTint: Theme.surfaceAlt
                                 }
                             }
                         }

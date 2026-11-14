@@ -19,7 +19,8 @@ Page {
         { title: qsTr("Usuarios"), description: qsTr("Altas, edición, roles y estado de las cuentas"), icon: "👥", page: "UserManagementPage.qml", tint: Theme.primary },
         { title: qsTr("Cursos"), description: qsTr("Grados y grupos del colegio"), icon: "🏫", page: "CourseManagementPage.qml", tint: Theme.warning },
         { title: qsTr("Materias"), description: qsTr("Catálogo de asignaturas"), icon: "📖", page: "SubjectManagementPage.qml", tint: Theme.purple },
-        { title: qsTr("Asignaciones"), description: qsTr("Profesor · materia · curso"), icon: "🔗", page: "AssignmentsManagementPage.qml", tint: Theme.teal }
+        { title: qsTr("Asignaciones"), description: qsTr("Profesor · materia · curso"), icon: "🔗", page: "AssignmentsManagementPage.qml", tint: Theme.teal },
+        { title: qsTr("Periodos académicos"), description: qsTr("Fechas y porcentaje de cada periodo del año"), icon: "📅", page: "PeriodosPage.qml", tint: Theme.success }
     ]
 
     ScrollView {

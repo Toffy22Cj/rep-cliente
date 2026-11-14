@@ -22,8 +22,10 @@ Page {
     background: Rectangle { color: Theme.background }
     header: PageHeader {
         title: qsTr("Planilla de notas")
-        subtitle: root.planilla ? qsTr("%1 · %2 · promedio del curso %3")
-                                  .arg(root.planilla.materia).arg(root.planilla.curso).arg(root.nota(root.planilla.promedioCurso)) : ""
+        subtitle: root.planilla ? qsTr("%1 · %2 · %3 · promedio del curso %4")
+                                  .arg(root.planilla.materia).arg(root.planilla.curso)
+                                  .arg(root.planilla.periodo ? root.planilla.periodo.nombre : root.planilla.ponderado ? qsTr("año ponderado") : qsTr("todas las actividades"))
+                                  .arg(root.nota(root.planilla.promedioCurso)) : ""
         AppButton {
             text: qsTr("Excel")
             variant: "secondary"
@@ -55,14 +57,14 @@ Page {
     function cargarPlanilla() {
         const a = asignacionActual()
         if (!a) return
-        requests.get("/profesor/notas?cursoId=" + a.cursoId + "&materiaId=" + a.materiaId,
+        requests.get("/profesor/notas?cursoId=" + a.cursoId + "&materiaId=" + a.materiaId + selector.parametro(),
                      datos => { planilla = datos; error = "" },
                      mensaje => { error = mensaje })
     }
 
     function exportar(formato) {
         const a = asignacionActual()
-        if (a) api.abrir("/api/profesor/notas/export?cursoId=" + a.cursoId + "&materiaId=" + a.materiaId + "&formato=" + formato)
+        if (a) api.abrir("/api/profesor/notas/export?cursoId=" + a.cursoId + "&materiaId=" + a.materiaId + "&formato=" + formato + selector.parametro())
     }
 
     Component.onCompleted: requests.get("/profesor/asignaciones", datos => {
@@ -86,6 +88,7 @@ Page {
                 textRole: "nombre"
                 onActivated: root.cargarPlanilla()
             }
+            SelectorPeriodo { id: selector; onCambiado: root.cargarPlanilla() }
             Item { Layout.fillWidth: true }
             Badge {
                 visible: root.planilla !== null
@@ -159,7 +162,19 @@ Page {
                             }
                         }
                         Repeater {
-                            model: [qsTr("Promedio"), qsTr("Desempeño"), qsTr("Faltas")]
+                            model: root.planilla && root.planilla.ponderado ? root.planilla.periodos : []
+                            delegate: Rectangle {
+                                required property var modelData
+                                width: root.anchoNota; height: 56; color: Theme.primarySoft
+                                Column {
+                                    anchors.centerIn: parent
+                                    Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.nombre; font.pixelSize: Theme.fontCaption; font.weight: Font.DemiBold; color: Theme.textPrimary }
+                                    Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.porcentaje + " %"; font.pixelSize: 10; color: Theme.textSecondary }
+                                }
+                            }
+                        }
+                        Repeater {
+                            model: [root.planilla && root.planilla.ponderado ? qsTr("Final") : qsTr("Promedio"), qsTr("Desempeño"), qsTr("Faltas")]
                             delegate: Rectangle {
                                 required property string modelData
                                 width: root.anchoNota; height: 56; color: Theme.surfaceAlt
@@ -191,6 +206,14 @@ Page {
                                         color: modelData.estado === "VENCIDA" ? Theme.dangerDark : root.colorNota(modelData.nota)
                                         font.pixelSize: modelData.nota !== null ? Theme.fontBody : Theme.fontCaption
                                     }
+                                }
+                            }
+                            Repeater {
+                                model: root.planilla && root.planilla.ponderado ? filaEst.modelData.periodos : []
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    width: root.anchoNota; height: root.altoFila; color: filaEst.fondo
+                                    Label { anchors.centerIn: parent; text: root.nota(modelData.promedio); color: root.colorNota(modelData.promedio) }
                                 }
                             }
                             Rectangle {

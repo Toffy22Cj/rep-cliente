@@ -1,5 +1,10 @@
 #include "EstudianteViewModel.h"
 #include "../core/SessionManager.h"
+#include "../core/AlmacenLocal.h"
+
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 namespace Rep {
 
@@ -11,6 +16,13 @@ EstudianteViewModel::EstudianteViewModel(QObject *parent)
       m_preguntaModel(new PreguntaModel(this))
 {
     auto &session = SessionManager::instance();
+
+    // Autoguardado: cada cambio de respuesta se escribe en disco (agrupado cada 0,5 s)
+    m_autoguardado = new QTimer(this);
+    m_autoguardado->setSingleShot(true);
+    m_autoguardado->setInterval(500);
+    connect(m_autoguardado, &QTimer::timeout, this, &EstudianteViewModel::guardarBorrador);
+    connect(m_preguntaModel, &QAbstractItemModel::dataChanged, m_autoguardado, qOverload<>(&QTimer::start));
 
     connect(m_service, &EstudianteService::materiasFetched, this, [this](const QList<MateriaDTO> &materias) {
         m_materiaModel->setMaterias(materias);
@@ -26,19 +38,25 @@ EstudianteViewModel::EstudianteViewModel(QObject *parent)
         m_currentActivityId = act.id;
         m_currentActivityTitle = act.titulo;
         m_currentActivityDescription = act.descripcion;
+        m_duracionMinutos = act.duracionMinutos;
         m_preguntaModel->setQuestions(act.preguntas);
-        m_activityStartedAt = QDateTime::currentDateTime();
+        restaurarBorrador();
         endRequest();
         emit currentActivityChanged();
         emit actividadConPreguntasFetched();
     });
 
     connect(m_service, &EstudianteService::actividadResuelta, this, [this](const ResultadoActividadDTO &resultado) {
+        m_entregada = true;
+        AlmacenLocal::eliminarBorrador(m_currentActivityId);
         endRequest();
         emit activitySubmitted(true, QString("Actividad enviada con éxito. Nota: %1").arg(resultado.nota));
     });
 
     connect(m_service, &EstudianteService::actividadEncolada, this, [this](long long) {
+        // La entrega ya está en la cola persistente; el borrador ya no hace falta
+        m_entregada = true;
+        AlmacenLocal::eliminarBorrador(m_currentActivityId);
         endRequest();
         emit activitySubmitted(true, tr("Sin conexión: tu entrega quedó guardada en este equipo y se enviará "
                                         "automáticamente cuando vuelva la conexión. Si el plazo vence antes, "
@@ -142,6 +160,73 @@ void EstudianteViewModel::submitActividad()
     }
 
     m_service->resolverActividad(request.estudianteId, m_currentActivityId, request, session.token());
+}
+
+qint64 EstudianteViewModel::limiteEpochMs() const
+{
+    if (m_duracionMinutos <= 0 || !m_activityStartedAt.isValid())
+        return 0;
+    return m_activityStartedAt.addSecs(qint64(m_duracionMinutos) * 60).toMSecsSinceEpoch();
+}
+
+/*
+ * Si existe un borrador (la app se cerró, se fue la luz…), recupera las respuestas y la
+ * hora de inicio original: reabrir la actividad no reinicia el reloj. Si no existe, lo
+ * crea ya con la hora de inicio.
+ */
+void EstudianteViewModel::restaurarBorrador()
+{
+    m_borradorRecuperado = false;
+    m_entregada = false;
+    m_activityStartedAt = QDateTime::currentDateTime();
+
+    if (const auto datos = AlmacenLocal::leerBorrador(m_currentActivityId)) {
+        const QJsonObject obj = QJsonDocument::fromJson(*datos).object();
+        const QDateTime inicio = QDateTime::fromString(obj["iniciadaEn"].toString(), Qt::ISODate);
+        if (inicio.isValid())
+            m_activityStartedAt = inicio;
+
+        QHash<long long, QJsonObject> porPregunta;
+        for (const QJsonValue &v : obj["respuestas"].toArray()) {
+            const QJsonObject r = v.toObject();
+            porPregunta.insert(r["preguntaId"].toVariant().toLongLong(), r);
+        }
+        const auto &preguntas = m_preguntaModel->questions();
+        for (int i = 0; i < preguntas.size(); ++i) {
+            const auto it = porPregunta.constFind(preguntas[i].id);
+            if (it == porPregunta.constEnd())
+                continue;
+            const long long opcion = it->value("opcionId").toVariant().toLongLong();
+            if (opcion > 0)
+                m_preguntaModel->selectOpcion(i, opcion);
+            const QString abierta = it->value("respuestaAbierta").toString();
+            if (!abierta.isEmpty())
+                m_preguntaModel->setRespuestaAbierta(i, abierta);
+            m_borradorRecuperado = true;
+        }
+    }
+    m_autoguardado->stop();
+    guardarBorrador();
+}
+
+void EstudianteViewModel::guardarBorrador()
+{
+    if (m_currentActivityId <= 0 || m_entregada)
+        return;
+    QJsonArray respuestas;
+    for (const auto &p : m_preguntaModel->questions()) {
+        if (p.opcionSeleccionadaId <= 0 && p.respuestaAbierta.isEmpty())
+            continue;
+        respuestas.append(QJsonObject{
+            {"preguntaId", QString::number(p.id)},
+            {"opcionId", QString::number(p.opcionSeleccionadaId)},
+            {"respuestaAbierta", p.respuestaAbierta}});
+    }
+    const QJsonObject obj{
+        {"actividadId", QString::number(m_currentActivityId)},
+        {"iniciadaEn", m_activityStartedAt.toString(Qt::ISODateWithMs)},
+        {"respuestas", respuestas}};
+    AlmacenLocal::guardarBorrador(m_currentActivityId, QJsonDocument(obj).toJson(QJsonDocument::Compact));
 }
 
 } // namespace Rep

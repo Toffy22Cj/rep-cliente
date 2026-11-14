@@ -1,0 +1,62 @@
+# Compila el cliente con Qt 6.8 y ejecuta las pruebas QtTest con CTest.
+name: Cliente CI
+
+on:
+  push:
+    branches: [main, master, develop, 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      QTKEYCHAIN_VERSION: 0.14.3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev \
+            libxkbcommon-dev libsecret-1-dev libglib2.0-dev
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          cache: true
+
+      - name: Caché de QtKeychain
+        id: cache-keychain
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/qtkeychain
+          key: qtkeychain-${{ env.QTKEYCHAIN_VERSION }}-qt6.8.3-${{ runner.os }}
+
+      - name: Compilar QtKeychain
+        if: steps.cache-keychain.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$QTKEYCHAIN_VERSION" https://github.com/frankosterfeld/qtkeychain.git src-keychain
+          cmake -S src-keychain -B build-keychain -G Ninja -DBUILD_WITH_QT6=ON -DBUILD_TEST_APPLICATION=OFF \
+            -DBUILD_TRANSLATIONS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/qtkeychain"
+          cmake --build build-keychain
+          cmake --install build-keychain
+
+      - name: Configurar
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${{ runner.temp }}/qtkeychain" -DREP_BUILD_TESTS=ON
+
+      - name: Compilar
+        run: cmake --build build
+
+      - name: Pruebas
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --test-dir build --output-on-failure

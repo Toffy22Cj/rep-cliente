@@ -36,6 +36,8 @@ public:
 
     Q_INVOKABLE void selectOpcion(int index, long long opcionId);
     Q_INVOKABLE void setRespuestaAbierta(int index, const QString &respuesta);
+    /** Preguntas sin opción elegida ni texto (se avisa antes de enviar). */
+    Q_INVOKABLE int sinResponder() const;
 
 private:
     QList<PreguntaDTO> m_questions;

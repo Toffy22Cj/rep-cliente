@@ -12,6 +12,11 @@ Page {
 
     // Local model to track attendance changes before saving
     ListModel { id: localAttendanceModel }
+    Connections {
+        target: localAttendanceModel
+        function onDataChanged() { root.conteoVersion++ }
+        function onCountChanged() { root.conteoVersion++ }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -81,6 +86,19 @@ Page {
             }
         }
 
+        RowLayout {
+            Layout.fillWidth: true
+            visible: localAttendanceModel.count > 0
+            spacing: Theme.spacingS
+            Label {
+                text: qsTr("Presentes %1 · Retardos %2 · Excusas %3 · Ausentes %4")
+                      .arg(root.conteo("PRESENTE")).arg(root.conteo("RETARDO")).arg(root.conteo("EXCUSA")).arg(root.conteo("NO_INGRESO"))
+                color: Theme.textSecondary
+                Layout.fillWidth: true
+            }
+            AppButton { text: qsTr("Todos presentes"); variant: "secondary"; onClicked: root.marcarTodos("PRESENTE") }
+        }
+
         Rectangle {
             Layout.fillWidth: true
             height: 1
@@ -123,29 +141,22 @@ Page {
                         color: Theme.textPrimary
                     }
                     
-                    // Estado
-                    RowLayout {
+                    // Estado: botonera segmentada (un clic por estudiante)
+                    Row {
                         Layout.fillWidth: true
-                        spacing: 5
-                        Label { 
-                            text: "Estado:" 
-                            width: 55
-                            font.pixelSize: 13
-                        }
-                        ComboBox {
-                            id: estadoCombo
-                            Layout.fillWidth: true
-                            model: ["PRESENTE", "NO_INGRESO", "EXCUSA"]
-                            currentIndex: {
-                                var idx = estadoCombo.model.indexOf(model.estado)
-                                return idx >= 0 ? idx : 1
-                            }
-                            onActivated: (index) => {
-                                localAttendanceModel.setProperty(model.index, "estado", currentText)
+                        spacing: 4
+                        Repeater {
+                            model: root.estados
+                            delegate: AppButton {
+                                required property var modelData
+                                text: modelData.texto
+                                variant: model.estado === modelData.valor ? "primary" : "secondary"
+                                Accessible.name: qsTr("%1: %2").arg(model.nombreEstudiante).arg(modelData.texto)
+                                onClicked: localAttendanceModel.setProperty(model.index, "estado", modelData.valor)
                             }
                         }
                     }
-                    
+
                     // Tipo de Excusa (solo visible si estado == EXCUSA)
                     RowLayout {
                         Layout.fillWidth: true
@@ -246,6 +257,22 @@ Page {
     }
 
     property var fechasRegistradas: []
+    readonly property var estados: [
+        { valor: "PRESENTE", texto: qsTr("Presente") },
+        { valor: "RETARDO", texto: qsTr("Retardo") },
+        { valor: "EXCUSA", texto: qsTr("Excusa") },
+        { valor: "NO_INGRESO", texto: qsTr("Ausente") }
+    ]
+    property int conteoVersion: 0
+    function conteo(valor) {
+        conteoVersion // dependencia para recalcular
+        let n = 0
+        for (let i = 0; i < localAttendanceModel.count; i++) if (localAttendanceModel.get(i).estado === valor) n++
+        return n
+    }
+    function marcarTodos(valor) {
+        for (let i = 0; i < localAttendanceModel.count; i++) localAttendanceModel.setProperty(i, "estado", valor)
+    }
     ApiRequests { id: requests }
     Toast { id: toast }
 
@@ -299,7 +326,7 @@ Page {
                for (let i = 0; i < estudiantes.length; i++) {
                    localAttendanceModel.append({
                        estudianteId: estudiantes[i].id,
-                       nombreEstudiante: estudiantes[i].nombre + " " + (estudiantes[i].apellido || ""),
+                       nombreEstudiante: estudiantes[i].nombre,
                        estado: "NO_INGRESO",
                        tipoExcusa: "",
                        observacion: ""

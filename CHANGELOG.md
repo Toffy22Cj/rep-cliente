@@ -1,5 +1,25 @@
 # Changelog — REP Cliente (Qt 6 / QML)
 
+## [0.5.0] — 2026-11-13
+### Nuevo
+- **Evaluación con temporizador**: cuenta regresiva anclada a la primera apertura,
+  envío automático al terminar (se encola sin conexión), aviso de preguntas sin
+  responder y modo pantalla completa.
+- **Autoguardado**: las respuestas y la hora de inicio se guardan en disco en cada
+  cambio (escritura atómica); al reabrir se recuperan y el reloj no se reinicia.
+- **Periodos académicos**: pantalla de administración y selector de periodo en
+  "Mis notas" y en la planilla (columnas por periodo y nota final ponderada).
+- **Asistencia**: botonera Presente/Retardo/Excusa/Ausente, conteo y "Todos presentes".
+- **Pruebas automáticas** (QtTest + CTest, `tests/`): modelo de preguntas, almacén local,
+  contrato de errores y respaldo sin conexión, cola de sincronización con servidor
+  falso. `ctest --test-dir build --output-on-failure`.
+- CI en GitHub Actions (Qt 6.8.3 + QtKeychain + ctest).
+
+### Cambiado
+- La lógica se compila como biblioteca `repcore` enlazada por la app y las pruebas
+  (opción `REP_BUILD_TESTS`, activa por defecto).
+- Las listas de estudiantes muestran el nombre completo.
+
 ## [0.4.0] — 2026-11-13
 ### Nuevo
 - **Mi perfil** (todos los roles, desde el menú del usuario): datos personales, cambio de

@@ -67,4 +67,33 @@ void borrarUsuario()
     QFile::remove(dir + "/archivos.json");
 }
 
+static QString rutaBorrador(long long actividadId)
+{
+    const QString dir = directorioUsuario() + "/borradores";
+    QDir().mkpath(dir);
+    return dir + "/actividad-" + QString::number(actividadId) + ".json";
+}
+
+void guardarBorrador(long long actividadId, const QByteArray &datos)
+{
+    QSaveFile f(rutaBorrador(actividadId));
+    if (f.open(QIODevice::WriteOnly)) {
+        f.write(datos);
+        f.commit(); // escritura atómica: un corte de luz no deja el borrador a medias
+    }
+}
+
+std::optional<QByteArray> leerBorrador(long long actividadId)
+{
+    QFile f(rutaBorrador(actividadId));
+    if (!f.open(QIODevice::ReadOnly))
+        return std::nullopt;
+    return f.readAll();
+}
+
+void eliminarBorrador(long long actividadId)
+{
+    QFile::remove(rutaBorrador(actividadId));
+}
+
 } // namespace Rep::AlmacenLocal
