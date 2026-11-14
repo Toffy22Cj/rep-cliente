@@ -56,6 +56,7 @@ struct ActividadConPreguntasDTO {
     long long id;
     QString titulo;
     QString descripcion;
+    int duracionMinutos = 0;
     QList<PreguntaDTO> preguntas;
 };
 

@@ -211,9 +211,10 @@ void ProfesorService::fetchEstudiantes(long long cursoId, const QString &token)
 
         for (const auto &v : array) {
             QJsonObject obj = v.toObject();
+            // Nombre completo: con solo el nombre de pila había homónimos en las listas
             estudiantes.append({
                 obj["id"].toVariant().toLongLong(),
-                obj["nombre"].toString(),
+                (obj["nombre"].toString() + " " + obj["apellido"].toString()).trimmed(),
                 obj["identificacion"].toString(),
                 obj["correo"].toString()
             });

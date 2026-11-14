@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.8 REQUIRED COMPONENTS Quick QuickControls2 Network)
+option(REP_BUILD_TESTS "Compilar las pruebas automáticas (QtTest/CTest)" ON)
 # QtKeychain: almacenamiento seguro del token en el llavero del sistema.
 # Si está instalado fuera de las rutas estándar, use -DCMAKE_PREFIX_PATH=<ruta>.
 find_package(Qt6Keychain REQUIRED)
@@ -46,7 +47,6 @@ set(HEADERS
 )
 
 set(SOURCES
-    main.cpp
     api/HttpClient.cpp
     api/ApiCliente.cpp
     api/AuthService.cpp
@@ -65,7 +65,13 @@ set(SOURCES
     viewmodels/AdminViewModel.cpp
 )
 
-qt_add_executable(appRep ${HEADERS} ${SOURCES})
+# Lógica de la aplicación (red, sesión, modelos, ViewModels) en una biblioteca que
+# enlazan tanto la aplicación como las pruebas automáticas.
+qt_add_library(repcore STATIC ${HEADERS} ${SOURCES})
+target_include_directories(repcore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(repcore PUBLIC Qt6::Quick Qt6::Network qt6keychain)
+
+qt_add_executable(appRep main.cpp)
 
 target_compile_definitions(appRep PRIVATE PROJECT_VERSION_STRING="${PROJECT_VERSION}")
 
@@ -84,6 +90,7 @@ set(QML_FILES
     qml/components/Badge.qml
     qml/components/BannerConexion.qml
     qml/components/Toast.qml
+    qml/components/SelectorPeriodo.qml
     qml/components/Card.qml
     qml/components/DatePicker.qml
     qml/components/EmptyState.qml
@@ -109,6 +116,7 @@ set(QML_FILES
     qml/pages/MaterialPage.qml
     qml/pages/PerfilPage.qml
     qml/pages/RegistroPage.qml
+    qml/pages/PeriodosPage.qml
     qml/pages/MisNotasPage.qml
     qml/pages/PlanillaNotasPage.qml
 )
@@ -127,8 +135,14 @@ set_target_properties(appRep PROPERTIES
 )
 
 target_link_libraries(appRep
-    PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::Network qt6keychain
+    PRIVATE repcore Qt6::Quick Qt6::QuickControls2 Qt6::Network qt6keychain
 )
+
+if(REP_BUILD_TESTS)
+    find_package(Qt6 REQUIRED COMPONENTS Test)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS appRep

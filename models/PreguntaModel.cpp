@@ -104,4 +104,15 @@ void PreguntaModel::setRespuestaAbierta(int index, const QString &respuesta)
     }
 }
 
+int PreguntaModel::sinResponder() const
+{
+    int n = 0;
+    for (const auto &p : m_questions) {
+        const bool abierta = p.tipo == QLatin1String("RESPUESTA_ABIERTA");
+        if (abierta ? p.respuestaAbierta.trimmed().isEmpty() : p.opcionSeleccionadaId <= 0)
+            ++n;
+    }
+    return n;
+}
+
 } // namespace Rep

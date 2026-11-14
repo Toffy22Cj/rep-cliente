@@ -128,6 +128,7 @@ void EstudianteService::fetchActividadConPreguntas(long long actividadId, const 
         act.id = obj["id"].toVariant().toLongLong();
         act.titulo = obj["titulo"].toString();
         act.descripcion = obj["descripcion"].toString();
+        act.duracionMinutos = obj["duracionMinutos"].toInt();
 
         QJsonArray preguntasArr = obj["preguntas"].toArray();
         for (const QJsonValue &pVal : preguntasArr) {

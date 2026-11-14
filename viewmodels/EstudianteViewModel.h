@@ -2,6 +2,7 @@
 #define ESTUDIANTEVIEWMODEL_H
 
 #include <QObject>
+#include <QTimer>
 #include <QDateTime>
 #include "../api/EstudianteService.h"
 #include "../models/MateriaModel.h"
@@ -20,6 +21,10 @@ class EstudianteViewModel : public QObject
     Q_PROPERTY(QString currentActivityTitle READ currentActivityTitle NOTIFY currentActivityChanged)
     Q_PROPERTY(QString currentActivityDescription READ currentActivityDescription NOTIFY currentActivityChanged)
     Q_PROPERTY(PreguntaModel* preguntaModel READ preguntaModel CONSTANT)
+    // Modo evaluación: límite de tiempo (0 = sin límite) anclado a la primera apertura
+    Q_PROPERTY(int duracionMinutos READ duracionMinutos NOTIFY currentActivityChanged)
+    Q_PROPERTY(qint64 limiteEpochMs READ limiteEpochMs NOTIFY currentActivityChanged)
+    Q_PROPERTY(bool borradorRecuperado READ borradorRecuperado NOTIFY currentActivityChanged)
 
 public:
     explicit EstudianteViewModel(QObject *parent = nullptr);
@@ -38,6 +43,12 @@ public:
     QString currentActivityTitle() const { return m_currentActivityTitle; }
     QString currentActivityDescription() const { return m_currentActivityDescription; }
     PreguntaModel* preguntaModel() const { return m_preguntaModel; }
+    int duracionMinutos() const { return m_duracionMinutos; }
+    qint64 limiteEpochMs() const;
+    bool borradorRecuperado() const { return m_borradorRecuperado; }
+
+    /** Guarda en disco las respuestas y la hora de inicio de la actividad abierta. */
+    Q_INVOKABLE void guardarBorrador();
 
 signals:
     void isLoadingChanged();
@@ -53,6 +64,12 @@ private:
     PreguntaModel *m_preguntaModel;
     int m_pendingRequests = 0;
     QDateTime m_activityStartedAt;
+    int m_duracionMinutos = 0;
+    bool m_borradorRecuperado = false;
+    bool m_entregada = false; // tras entregar no se vuelve a crear el borrador
+    QTimer *m_autoguardado = nullptr;
+
+    void restaurarBorrador();
 
     void beginRequest();
     void endRequest();
