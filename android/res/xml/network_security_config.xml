@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- El servidor REP vive en la red local del colegio (IP privada, hotspot, Bluetooth PAN)
+     y habla HTTP: Android lo bloquea por defecto, así que se permite de forma explícita. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

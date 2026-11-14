@@ -150,6 +150,7 @@ Page {
                             ListElement { icon: "📊"; label: "Planilla de notas"; page: "PlanillaNotasPage.qml" }
                             ListElement { icon: "📄"; label: "Reportes"; page: "ReportsPage.qml" }
                             ListElement { icon: "📚"; label: "Material de estudio"; page: "MaterialPage.qml" }
+                            ListElement { icon: "🕘"; label: "Mi horario"; page: "MiHorarioPage.qml" }
                             ListElement { icon: "👤"; label: "Mi perfil"; page: "PerfilPage.qml" }
                         }
                         

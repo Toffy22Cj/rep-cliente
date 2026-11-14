@@ -21,6 +21,11 @@ Page {
             onClicked: root.StackView.view.push("MisNotasPage.qml")
         }
         AppButton {
+            text: qsTr("🕘 Horario")
+            variant: "secondary"
+            onClicked: root.StackView.view.push("MiHorarioPage.qml")
+        }
+        AppButton {
             text: qsTr("📚 Material de estudio")
             variant: "secondary"
             onClicked: root.StackView.view.push("MaterialPage.qml")

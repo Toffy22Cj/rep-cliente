@@ -14,7 +14,10 @@
 #include "core/Sincronizacion.h"
 #include "core/Descubrimiento.h"
 #include "core/security/SecureTokenStorage.h"
+#ifdef REP_USAR_KEYCHAIN
 #include "core/security/QtKeychainCredentialStore.h"
+#endif
+#include "core/security/ArchivoPrivadoCredentialStore.h"
 
 int main(int argc, char *argv[])
 {
@@ -28,9 +31,15 @@ int main(int argc, char *argv[])
     // Estilo base sobre el que se aplica el tema propio (qml/theme/Theme.qml)
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
-    // El token JWT se guarda en el llavero del sistema operativo
+#ifdef REP_USAR_KEYCHAIN
+    // Escritorio: el token JWT se guarda en el llavero del sistema operativo
     Rep::SecureTokenStorage::instance().setBackend(
         std::make_unique<Rep::Security::QtKeychainCredentialStore>());
+#else
+    // Android: almacenamiento privado de la app
+    Rep::SecureTokenStorage::instance().setBackend(
+        std::make_unique<Rep::Security::ArchivoPrivadoCredentialStore>());
+#endif
 
     Rep::SessionManager &sessionManager = Rep::SessionManager::instance();
     Rep::LoginViewModel loginViewModel;
@@ -64,7 +73,14 @@ int main(int argc, char *argv[])
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    engine.loadFromModule("Rep", "Main");
+    // Teléfonos (Android) usan la interfaz táctil de estudiante y profesor. En escritorio
+    // se puede probar con REP_MOVIL=1.
+#ifdef Q_OS_ANDROID
+    const bool movil = true;
+#else
+    const bool movil = qEnvironmentVariable("REP_MOVIL") == QLatin1String("1");
+#endif
+    engine.loadFromModule("Rep", movil ? "MainMovil" : "Main");
     if (engine.rootObjects().isEmpty())
         return -1;
 

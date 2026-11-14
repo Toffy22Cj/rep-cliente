@@ -20,6 +20,7 @@ Page {
         { title: qsTr("Cursos"), description: qsTr("Grados y grupos del colegio"), icon: "🏫", page: "CourseManagementPage.qml", tint: Theme.warning },
         { title: qsTr("Materias"), description: qsTr("Catálogo de asignaturas"), icon: "📖", page: "SubjectManagementPage.qml", tint: Theme.purple },
         { title: qsTr("Asignaciones"), description: qsTr("Profesor · materia · curso"), icon: "🔗", page: "AssignmentsManagementPage.qml", tint: Theme.teal },
+        { title: qsTr("Horario de clases"), description: qsTr("Clases de cada curso por día y hora"), icon: "🕘", page: "HorarioPage.qml", tint: Theme.info },
         { title: qsTr("Periodos académicos"), description: qsTr("Fechas y porcentaje de cada periodo del año"), icon: "📅", page: "PeriodosPage.qml", tint: Theme.success }
     ]
 

@@ -1,5 +1,18 @@
 # Changelog — REP Cliente (Qt 6 / QML)
 
+## [1.1.0] — 2026-11-14
+### Nuevo
+- **App Android** para estudiante y profesor (`qml/movil/`, `android/`, `docs/ANDROID.md`):
+  navegación inferior por rol; actividades con resolución y resultado, notas por
+  periodo, horario, material; profesor: clases de hoy, asistencia táctil con guardado
+  sin conexión, calificación móvil con «Guardar y siguiente». `REP_MOVIL=1` la abre en
+  escritorio.
+- **Horario de clases**: gestión del administrador (`HorarioPage`, sin cruces) y
+  «Mi horario» para estudiante y profesor (`VistaHorario`, resalta la clase en curso).
+- `Sincronizacion.encolarPeticion` para encolar desde QML cualquier envío sin conexión.
+- `ArchivoPrivadoCredentialStore` y opción `REP_USAR_KEYCHAIN` (desactivada en Android).
+- `PageHeader` compacto en pantallas estrechas.
+
 ## [1.0.0] — 2026-11-14
 ### Nuevo
 - **Descubrimiento del servidor** (`core/Descubrimiento`, propiedad `descubrimiento`):

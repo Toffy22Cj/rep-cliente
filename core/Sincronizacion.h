@@ -43,6 +43,13 @@ public:
     Q_INVOKABLE void reintentarAhora();
 
     /**
+     * Desde QML: guarda una petición a la API (p. ej. la asistencia tomada sin conexión)
+     * para enviarla al reconectar. `ruta` relativa a la API ("/profesor/asistencia?…").
+     */
+    Q_INVOKABLE void encolarPeticion(const QString &metodo, const QString &ruta, const QVariant &cuerpo,
+                                     const QString &descripcion);
+
+    /**
      * El servidor cambió de dirección (mismo servidor, otra IP): los envíos pendientes
      * que apuntaban a la dirección anterior pasan a la nueva.
      */

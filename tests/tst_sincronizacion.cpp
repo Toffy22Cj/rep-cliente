@@ -2,6 +2,7 @@
 #include "core/SessionManager.h"
 #include "core/Sincronizacion.h"
 
+#include <QSettings>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QtTest>
@@ -100,6 +101,25 @@ private slots:
         QCOMPARE(rechazado.last().at(1).toString(), QStringLiteral("La actividad ya cerró"));
         QCOMPARE(sinc.pendientes(), 0);
         QCOMPARE(s.peticiones.size(), 1);
+    }
+
+    void encolarPeticionDesdeQmlArmaUrlYCuerpo()
+    {
+        auto &sinc = Sincronizacion::instance();
+        ServidorFalso s;
+        s.responder(200, "[]");
+        QSettings().setValue("api/baseUrl", s.base());
+        QSignalSpy completado(&sinc, &Sincronizacion::envioCompletado);
+        // Lo que hace la asistencia móvil sin conexión
+        const QVariantList cuerpo{QVariantMap{{"estudianteId", 5}, {"estado", "RETARDO"}}};
+        sinc.encolarPeticion("post", "/profesor/asistencia?cursoId=1&materiaId=1&fecha=2026-11-14", cuerpo,
+                             QStringLiteral("Asistencia"));
+        sinc.reintentarAhora();
+        QVERIFY(completado.wait(5000));
+        QCOMPARE(s.peticiones.first().metodo, QByteArray("POST"));
+        QCOMPARE(s.peticiones.first().ruta, QByteArray("/api/profesor/asistencia?cursoId=1&materiaId=1&fecha=2026-11-14"));
+        QVERIFY(s.peticiones.first().cuerpo.contains("\"estado\":\"RETARDO\""));
+        QSettings().remove("api/baseUrl");
     }
 
     void laColaPersisteEnDisco()

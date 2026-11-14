@@ -14,6 +14,8 @@ ToolBar {
     property bool showBack: true
     property bool showUser: true
     default property alias actions: actionsRow.data
+    /** Teléfono: título más pequeño y sin chip de usuario (el menú está en la app móvil). */
+    readonly property bool compacto: width < 600
 
     signal backClicked()
 
@@ -54,7 +56,7 @@ ToolBar {
             Label {
                 text: header.title
                 color: Theme.textPrimary
-                font.pixelSize: Theme.fontTitle
+                font.pixelSize: header.compacto ? Theme.fontSubtitle : Theme.fontTitle
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -75,7 +77,7 @@ ToolBar {
         }
 
         UserChip {
-            visible: header.showUser && sessionManager.isAuthenticated
+            visible: header.showUser && sessionManager.isAuthenticated && !header.compacto
         }
     }
 }

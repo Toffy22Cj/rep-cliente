@@ -1,4 +1,5 @@
 #include "Sincronizacion.h"
+#include "../api/ApiConfig.h"
 #include "SessionManager.h"
 #include "../api/HttpClient.h"
 
@@ -127,6 +128,13 @@ void Sincronizacion::reubicar(const QString &baseAnterior, const QString &baseNu
     }
     if (cambio)
         guardarCola();
+}
+
+void Sincronizacion::encolarPeticion(const QString &metodo, const QString &ruta, const QVariant &cuerpo,
+                                     const QString &descripcion)
+{
+    const QByteArray json = QJsonDocument::fromVariant(cuerpo).toJson(QJsonDocument::Compact);
+    encolar(metodo.toUpper().toLatin1(), QUrl(ApiConfig::url(ruta)), json, descripcion);
 }
 
 void Sincronizacion::reintentarAhora()
