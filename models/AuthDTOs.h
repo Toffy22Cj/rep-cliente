@@ -13,6 +13,7 @@ struct AuthUsuarioDTO {
     QString correo;
     QString identificacion;
     Rol rol = Rol::ESTUDIANTE;
+    bool debeCambiarContrasena = false; // contraseña provisional: cambiarla antes de seguir
 };
 
 struct LoginRequest {

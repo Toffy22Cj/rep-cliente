@@ -12,6 +12,7 @@
 #include "api/ApiCliente.h"
 #include "core/SessionManager.h"
 #include "core/Sincronizacion.h"
+#include "core/Descubrimiento.h"
 #include "core/security/SecureTokenStorage.h"
 #include "core/security/QtKeychainCredentialStore.h"
 
@@ -54,6 +55,9 @@ int main(int argc, char *argv[])
     context->setContextProperty("api", &apiCliente);
     // Estado de conexión y envíos pendientes (modo sin conexión)
     context->setContextProperty("sincronizacion", &Rep::Sincronizacion::instance());
+    // Busca el servidor en la red (LAN, Wi-Fi, red propia, Bluetooth PAN) y escucha sus anuncios
+    context->setContextProperty("descubrimiento", &Rep::Descubrimiento::instance());
+    Rep::Descubrimiento::instance().iniciar();
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,

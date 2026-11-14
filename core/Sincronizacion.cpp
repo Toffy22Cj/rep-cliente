@@ -111,6 +111,24 @@ void Sincronizacion::encolar(const QByteArray &metodo, const QUrl &url, const QB
     guardarCola();
 }
 
+void Sincronizacion::reubicar(const QString &baseAnterior, const QString &baseNueva)
+{
+    if (baseAnterior.isEmpty() || baseAnterior == baseNueva)
+        return;
+    bool cambio = false;
+    for (int i = 0; i < m_cola.size(); ++i) {
+        QJsonObject e = m_cola.at(i).toObject();
+        const QString url = e["url"].toString();
+        if (url.startsWith(baseAnterior)) {
+            e["url"] = baseNueva + url.mid(baseAnterior.size());
+            m_cola[i] = e;
+            cambio = true;
+        }
+    }
+    if (cambio)
+        guardarCola();
+}
+
 void Sincronizacion::reintentarAhora()
 {
     if (!m_enviando && !m_cola.isEmpty() && SessionManager::instance().isAuthenticated()

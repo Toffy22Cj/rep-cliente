@@ -1,5 +1,19 @@
 # Changelog — REP Cliente (Qt 6 / QML)
 
+## [1.0.0] — 2026-11-14
+### Nuevo
+- **Descubrimiento del servidor** (`core/Descubrimiento`, propiedad `descubrimiento`):
+  busca servidores REP por broadcast en todas las redes del equipo, multicast y
+  localhost; escucha sus anuncios; la primera vez usa el único que encuentre; si el
+  servidor cambia de IP lo sigue por su id y mueve la cola de envíos pendientes.
+- Inicio de sesión: indicador del servidor en uso y selector (`SelectorServidor`) con
+  los encontrados y dirección escrita a mano (validada contra `/api/public/servidor`).
+- Contraseña provisional: tras el login se abre "Cambie su contraseña" sin poder salir
+  hasta cambiarla.
+- Pruebas: `tst_descubrimiento` (búsqueda, elección automática, reconexión por id,
+  otro servidor no reemplaza al guardado, dirección manual).
+- Iconos de la aplicación (`empaquetado/recursos`).
+
 ## [0.5.1] — 2026-11-14
 ### Corregido
 - **Mi perfil** no abría desde el menú de usuario (ruta relativa a `components/`).
