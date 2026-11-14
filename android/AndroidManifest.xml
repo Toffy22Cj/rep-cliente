@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- Basado en la plantilla de Qt 6.8. Los marcadores -- %%…%% -- los rellena androiddeployqt. -->
+<!-- Basado en la plantilla de Qt 6.8. Los marcadores INSERT_* de los atributos los rellena androiddeployqt. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:versionName="-- %%INSERT_VERSION_NAME%% --"
     android:versionCode="-- %%INSERT_VERSION_CODE%% --"
