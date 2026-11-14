@@ -55,6 +55,7 @@ void AuthService::onLoginReply(QNetworkReply *reply)
         response.usuario.apellido = userObj["apellido"].toString();
         response.usuario.correo = userObj["correo"].toString();
         response.usuario.identificacion = userObj["identificacion"].toString();
+        response.usuario.debeCambiarContrasena = userObj["debeCambiarContrasena"].toBool();
         
         QString rolStr = userObj["rol"].toString().trimmed().toUpper();
         if (rolStr == "ADMIN") response.usuario.rol = Rol::ADMIN;

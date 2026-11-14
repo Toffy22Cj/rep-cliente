@@ -50,6 +50,12 @@ ApplicationWindow {
     Toast { id: toastGlobal }
 
     // Resultado de los envíos que estaban en cola sin conexión
+    // El servidor cambió de dirección (DHCP, otra red): el cliente lo siguió solo
+    Connections {
+        target: descubrimiento
+        function onReconectado(nombre, url) { toastGlobal.mostrar(qsTr("Servidor «%1» encontrado en %2").arg(nombre).arg(url), "exito") }
+    }
+
     Connections {
         target: sincronizacion
         function onEnvioCompletado(descripcion, respuesta) {
@@ -97,6 +103,11 @@ ApplicationWindow {
         id: loginComponent
         LoginPage {
             onLoginSuccess: {
+                // Contraseña provisional (p. ej. administrador recién instalado): primero cambiarla
+                if (sessionManager.debeCambiarContrasena) {
+                    stackView.replace(null, Qt.resolvedUrl("pages/PerfilPage.qml"), { obligatorio: true })
+                    return
+                }
                 const dash = dashboardFor(sessionManager.userRole)
                 if (dash !== loginComponent)
                     stackView.replace(null, dash)
@@ -112,8 +123,13 @@ ApplicationWindow {
     Connections {
         target: sessionManager
         function onSessionChanged() {
-            if (!sessionManager.isAuthenticated)
+            if (!sessionManager.isAuthenticated) {
                 stackView.replace(null, loginComponent)
+            } else if (!sessionManager.debeCambiarContrasena && stackView.currentItem
+                       && stackView.currentItem.obligatorio === true) {
+                // Contraseña ya cambiada: se habilita el panel del rol
+                stackView.replace(null, dashboardFor(sessionManager.userRole))
+            }
         }
     }
 }

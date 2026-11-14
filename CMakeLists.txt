@@ -24,6 +24,7 @@ set(HEADERS
     core/SessionManager.h
     core/AlmacenLocal.h
     core/Sincronizacion.h
+    core/Descubrimiento.h
     core/security/ICredentialStore.h
     core/security/SecureTokenStorage.h
     core/security/QtKeychainCredentialStore.h
@@ -55,6 +56,7 @@ set(SOURCES
     api/AdminService.cpp
     core/AlmacenLocal.cpp
     core/Sincronizacion.cpp
+    core/Descubrimiento.cpp
     core/security/SecureTokenStorage.cpp
     core/security/QtKeychainCredentialStore.cpp
     models/PreguntaModel.cpp
@@ -92,6 +94,7 @@ set(QML_FILES
     qml/components/Toast.qml
     qml/components/SelectorPeriodo.qml
     qml/components/ResultadoActividad.qml
+    qml/components/SelectorServidor.qml
     qml/components/Card.qml
     qml/components/DatePicker.qml
     qml/components/EmptyState.qml

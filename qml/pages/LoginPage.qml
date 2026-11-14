@@ -137,6 +137,48 @@ Page {
                         onClicked: root.submit()
                     }
 
+                    // Servidor en uso: se encuentra solo en la red; se puede cambiar
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.topMargin: Theme.spacingS
+                        implicitHeight: filaServidor.implicitHeight + 2 * Theme.spacingS
+                        radius: Theme.radiusM
+                        color: Theme.surfaceAlt
+                        RowLayout {
+                            id: filaServidor
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingS
+                            spacing: Theme.spacingS
+                            Rectangle {
+                                width: 10; height: 10; radius: 5
+                                color: sincronizacion.enLinea ? Theme.success : Theme.danger
+                                Accessible.name: sincronizacion.enLinea ? qsTr("Servidor disponible") : qsTr("Servidor no disponible")
+                            }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
+                                Label {
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    color: Theme.textPrimary
+                                    font.pixelSize: Theme.fontCaption
+                                    font.weight: Font.DemiBold
+                                    text: descubrimiento.buscando && !descubrimiento.configurado ? qsTr("Buscando el servidor en la red…")
+                                          : descubrimiento.servidorNombre !== "" ? descubrimiento.servidorNombre
+                                          : qsTr("Servidor")
+                                }
+                                Label {
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    color: Theme.textMuted
+                                    font.pixelSize: Theme.fontCaption
+                                    text: descubrimiento.servidorUrl
+                                }
+                            }
+                            AppButton { text: qsTr("Cambiar"); variant: "secondary"; onClicked: selectorServidor.open() }
+                        }
+                    }
+
                     Label {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.topMargin: Theme.spacingS
@@ -170,6 +212,17 @@ Page {
     function submit() {
         if (canSubmit)
             loginViewModel.login(identField.text.trim(), passField.text)
+    }
+
+    SelectorServidor { id: selectorServidor }
+
+    // Primera ejecución: si hay varios servidores en la red, el usuario elige
+    Connections {
+        target: descubrimiento
+        function onBusquedaTerminada(encontrados) {
+            if (!descubrimiento.configurado && encontrados !== 1 && !selectorServidor.opened)
+                selectorServidor.open()
+        }
     }
 
     Connections {

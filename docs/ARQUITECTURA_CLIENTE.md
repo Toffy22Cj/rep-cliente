@@ -74,3 +74,11 @@ prueba).
   reconectar (banner en `Main.qml`).
 - Borradores de actividades (`borradores/actividad-<id>.json`): respuestas y hora de
   inicio; el temporizador se ancla a esa hora.
+
+## Conexión con el servidor
+
+`Descubrimiento` encuentra el servidor sin configuración (ver
+`REP/docs/INSTALACION_Y_RED.md`). La dirección elegida se guarda en QSettings
+(`api/baseUrl`, `api/servidorId`, `api/servidorNombre`); `REP_API_URL` sigue teniendo
+prioridad. Puertos UDP configurables para pruebas: `red/puertoDescubrimiento`,
+`red/puertoAnuncio`.

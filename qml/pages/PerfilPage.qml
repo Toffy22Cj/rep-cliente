@@ -15,11 +15,14 @@ Page {
     property string errorClave: ""
     property bool guardandoDatos: false
     property bool guardandoClave: false
+    /** Contraseña provisional: no se puede salir hasta cambiarla. */
+    property bool obligatorio: false
 
     background: Rectangle { color: Theme.background }
     header: PageHeader {
-        title: qsTr("Mi perfil")
-        subtitle: qsTr("Datos personales y seguridad de la cuenta")
+        title: root.obligatorio ? qsTr("Cambie su contraseña") : qsTr("Mi perfil")
+        subtitle: root.obligatorio ? qsTr("Su contraseña es provisional") : qsTr("Datos personales y seguridad de la cuenta")
+        showBack: !root.obligatorio
     }
 
     ApiRequests { id: requests }
@@ -85,6 +88,7 @@ Page {
             guardandoClave = false
             // El servidor invalida los tokens anteriores y entrega uno nuevo
             sessionManager.actualizarToken(datos.token)
+            sessionManager.contrasenaCambiada()
             actualField.text = ""; nuevaField.text = ""; confirmarField.text = ""
             toast.mostrar(qsTr("Contraseña actualizada. Las sesiones abiertas en otros equipos se cerraron."), "exito")
         }, mensaje => { guardandoClave = false; errorClave = mensaje })
@@ -102,6 +106,23 @@ Page {
             x: (scroll.availableWidth - width) / 2
             y: Theme.spacingL
             spacing: Theme.spacingM
+
+            Rectangle {
+                visible: root.obligatorio
+                Layout.fillWidth: true
+                implicitHeight: avisoObligatorio.implicitHeight + 2 * Theme.spacingM
+                radius: Theme.radiusM
+                color: Theme.warningSoft
+                border.color: Theme.warning
+                Label {
+                    id: avisoObligatorio
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingM
+                    wrapMode: Text.WordWrap
+                    color: Theme.textPrimary
+                    text: qsTr("⚠ Está usando una contraseña provisional. Defina una contraseña propia en «Cambiar contraseña» para continuar.")
+                }
+            }
 
             // ------------------------------------------------ cabecera
             Card {

@@ -29,6 +29,7 @@ class SessionManager : public QObject
     Q_PROPERTY(QString userFullName READ userFullName NOTIFY sessionChanged)
     Q_PROPERTY(QString userInitials READ userInitials NOTIFY sessionChanged)
     Q_PROPERTY(QString userRole READ userRole NOTIFY sessionChanged)
+    Q_PROPERTY(bool debeCambiarContrasena READ debeCambiarContrasena NOTIFY sessionChanged)
 
 public:
     static SessionManager& instance() {
@@ -53,6 +54,7 @@ public:
         return initials.isEmpty() ? QStringLiteral("?") : initials;
     }
     QString userRole() const { return roleToString(m_user.rol); }
+    bool debeCambiarContrasena() const { return m_user.debeCambiarContrasena; }
 
     void setSession(const AuthUsuarioDTO &user, const QString &token) {
         m_user = user;
@@ -66,6 +68,13 @@ public:
     }
 
     /** Sustituye el token (p. ej. tras cambiar la contraseña, que invalida el anterior). */
+    /** Tras cambiar la contraseña provisional (no se guarda en el perfil local). */
+    Q_INVOKABLE void contrasenaCambiada() {
+        if (!m_user.debeCambiarContrasena) return;
+        m_user.debeCambiarContrasena = false;
+        emit sessionChanged();
+    }
+
     Q_INVOKABLE void actualizarToken(const QString &token) {
         m_token = token;
         m_expiresAt = jwtExpiry(token);
