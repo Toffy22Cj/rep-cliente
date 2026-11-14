@@ -53,9 +53,10 @@ ItemDelegate {
         id: menu
         y: chip.height
         MenuItem {
+            objectName: "menuMiPerfil"
             text: qsTr("Mi perfil")
             onTriggered: {
-                stackView.push("pages/PerfilPage.qml")
+                stackView.push(Qt.resolvedUrl("../pages/PerfilPage.qml"))
             }
         }
         MenuItem {

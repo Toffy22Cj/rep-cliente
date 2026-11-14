@@ -61,6 +61,8 @@ void EstudianteService::fetchActividades(long long estudianteId, const QString &
             ActividadDTO act;
             act.id = obj["id"].toVariant().toLongLong();
             act.duracionMinutos = obj["duracionMinutos"].toInt();
+            act.estadoEntrega = obj["estadoEntrega"].toString();
+            act.nota = obj["nota"].isDouble() ? obj["nota"].toDouble() : -1;
             act.titulo = obj["titulo"].toString();
             act.tipo = obj["tipo"].toString();
             act.descripcion = obj["descripcion"].toString();
@@ -93,6 +95,8 @@ void EstudianteService::fetchActividadesByMateria(long long estudianteId, long l
             ActividadDTO act;
             act.id = obj["id"].toVariant().toLongLong();
             act.duracionMinutos = obj["duracionMinutos"].toInt();
+            act.estadoEntrega = obj["estadoEntrega"].toString();
+            act.nota = obj["nota"].isDouble() ? obj["nota"].toDouble() : -1;
             act.titulo = obj["titulo"].toString();
             act.tipo = obj["tipo"].toString();
             act.descripcion = obj["descripcion"].toString();

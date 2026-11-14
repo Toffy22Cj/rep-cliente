@@ -150,6 +150,7 @@ Page {
                             ListElement { icon: "📊"; label: "Planilla de notas"; page: "PlanillaNotasPage.qml" }
                             ListElement { icon: "📄"; label: "Reportes"; page: "ReportsPage.qml" }
                             ListElement { icon: "📚"; label: "Material de estudio"; page: "MaterialPage.qml" }
+                            ListElement { icon: "👤"; label: "Mi perfil"; page: "PerfilPage.qml" }
                         }
                         
                         delegate: Rectangle {
@@ -291,6 +292,9 @@ Page {
                         profesorViewModel.loadCursos()
                     }
                 }
+
+                // Menú de usuario (Mi perfil / Cerrar sesión), igual que en el resto de pantallas
+                UserChip {}
             }
 
             // Aviso cuando el profesor aún no tiene materias/cursos asignados: antes el panel

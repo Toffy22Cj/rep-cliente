@@ -91,6 +91,7 @@ set(QML_FILES
     qml/components/BannerConexion.qml
     qml/components/Toast.qml
     qml/components/SelectorPeriodo.qml
+    qml/components/ResultadoActividad.qml
     qml/components/Card.qml
     qml/components/DatePicker.qml
     qml/components/EmptyState.qml

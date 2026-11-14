@@ -1,5 +1,22 @@
 # Changelog — REP Cliente (Qt 6 / QML)
 
+## [0.5.1] — 2026-11-14
+### Corregido
+- **Mi perfil** no abría desde el menú de usuario (ruta relativa a `components/`).
+  El panel del profesor ahora tiene menú de usuario y "Mi perfil" en el menú lateral.
+- Las actividades ya entregadas mostraban "Resolver" y el servidor negaba el acceso.
+
+### Nuevo
+- Panel del estudiante: "✔ Hecho" con la nota, "Ver resultado", "Continuar" en las
+  empezadas, "Vencida" y "Enviada · se sincronizará" sin conexión.
+- Resultado de la actividad (`ResultadoActividad`): nota, observaciones y, si el
+  profesor lo permite, la respuesta del estudiante y la correcta por pregunta.
+- Profesor: opción "Mostrar las respuestas correctas al estudiante después de entregar"
+  al crear o editar una actividad y en el menú de cada actividad.
+- Editor de preguntas: estado "✔ todo guardado" / "hay una pregunta sin guardar",
+  botón "Listo", avisos al guardar o eliminar y confirmación al salir con una pregunta
+  sin guardar.
+
 ## [0.5.0] — 2026-11-13
 ### Nuevo
 - **Evaluación con temporizador**: cuenta regresiva anclada a la primera apertura,

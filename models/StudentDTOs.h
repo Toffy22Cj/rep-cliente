@@ -50,6 +50,9 @@ struct ActividadDTO {
     QString materiaNombre;
     long long cursoId;
     QString cursoNombre;
+    // Solo en la lista del estudiante
+    QString estadoEntrega;   // PENDIENTE, EN_CURSO, ENTREGADA, VENCIDA, EN_COLA (local)
+    double nota = -1;        // < 0: sin nota
 };
 
 struct ActividadConPreguntasDTO {

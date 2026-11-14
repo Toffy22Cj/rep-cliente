@@ -61,14 +61,7 @@ Page {
         "VENCIDA": { texto: qsTr("No entregada"), tint: Theme.dangerDark, soft: Theme.dangerSoft }
     })
 
-    function verDetalle(actividad) {
-        detalle.actividad = actividad
-        detalle.resultado = null
-        detalle.open()
-        requests.get("/estudiante/" + sessionManager.userId + "/actividades/" + actividad.actividadId + "/resultado",
-                     datos => { detalle.resultado = datos },
-                     mensaje => { detalle.resultado = { error: mensaje } })
-    }
+    function verDetalle(actividad) { resultado.abrir(actividad.actividadId, actividad.titulo) }
 
     Component.onCompleted: cargar()
 
@@ -243,66 +236,5 @@ Page {
 
     BusyIndicator { anchors.centerIn: parent; running: requests.enCurso > 0 && root.boletin === null; visible: running }
 
-    // ------------------------------------------------ detalle de corrección
-    Dialog {
-        id: detalle
-        property var actividad: null
-        property var resultado: null
-        anchors.centerIn: parent
-        modal: true
-        width: Math.min(root.width - 40, 640)
-        height: Math.min(root.height - 80, 560)
-        title: actividad ? actividad.titulo : ""
-        standardButtons: Dialog.Close
-
-        ScrollView {
-            anchors.fill: parent
-            contentWidth: availableWidth
-            ColumnLayout {
-                width: parent.width
-                spacing: Theme.spacingS
-                Label {
-                    visible: detalle.resultado !== null && detalle.resultado.error === undefined
-                    text: detalle.resultado ? qsTr("Nota: %1").arg(root.nota(detalle.resultado.nota)) : ""
-                    font.pixelSize: Theme.fontTitle
-                    font.weight: Font.Bold
-                    color: root.colorNota(detalle.resultado ? detalle.resultado.nota : null)
-                }
-                Label {
-                    visible: detalle.resultado && !!detalle.resultado.observaciones
-                    text: detalle.resultado && detalle.resultado.observaciones ? qsTr("Observaciones del profesor: %1").arg(detalle.resultado.observaciones) : ""
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    color: Theme.textPrimary
-                }
-                Label {
-                    visible: detalle.resultado && detalle.resultado.error !== undefined
-                    text: detalle.resultado && detalle.resultado.error ? detalle.resultado.error : ""
-                    color: Theme.danger
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-                Repeater {
-                    model: detalle.resultado && detalle.resultado.resultadosPreguntas ? detalle.resultado.resultadosPreguntas : []
-                    delegate: Rectangle {
-                        required property var modelData
-                        required property int index
-                        Layout.fillWidth: true
-                        implicitHeight: textoRetro.implicitHeight + 2 * Theme.spacingS
-                        radius: Theme.radiusS
-                        color: modelData.esCorrecta ? Theme.successSoft : Theme.surfaceAlt
-                        Label {
-                            id: textoRetro
-                            anchors.fill: parent
-                            anchors.margins: Theme.spacingS
-                            wrapMode: Text.WordWrap
-                            text: (index + 1) + ". " + (modelData.esCorrecta ? "✔ " : "") + modelData.retroalimentacion
-                            color: Theme.textPrimary
-                        }
-                    }
-                }
-                BusyIndicator { visible: detalle.resultado === null; running: visible; Layout.alignment: Qt.AlignHCenter }
-            }
-        }
-    }
+    ResultadoActividad { id: resultado }
 }

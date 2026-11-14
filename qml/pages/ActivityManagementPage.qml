@@ -68,6 +68,19 @@ Page {
         }, fallo)
     }
 
+    function cambiarRespuestas(a) {
+        const mostrar = a.mostrarRespuestas === false
+        requests.put("/actividades/" + a.id, {
+            titulo: a.titulo, tipo: String(a.tipo).toUpperCase(), descripcion: a.descripcion || "",
+            fechaEntrega: a.fechaEntrega, duracionMinutos: a.duracionMinutos,
+            materiaId: a.materiaId, cursoId: a.cursoId, mostrarRespuestas: mostrar
+        }, () => {
+            toast.mostrar(mostrar ? qsTr("Los estudiantes verán las respuestas correctas")
+                                  : qsTr("Los estudiantes solo verán su nota"), "exito")
+            cargar()
+        }, fallo)
+    }
+
     function eliminar(a) {
         requests.eliminar("/actividades/" + a.id, () => {
             toast.mostrar(qsTr("Actividad eliminada"), "exito")
@@ -148,6 +161,11 @@ Page {
                             Label { text: tarjeta.modelData.titulo; font.pixelSize: Theme.fontSubtitle; font.weight: Font.DemiBold; color: Theme.textPrimary; elide: Text.ElideRight; Layout.maximumWidth: 420 }
                             Badge { text: String(tarjeta.modelData.tipo).toUpperCase() }
                             Badge {
+                                visible: tarjeta.modelData.mostrarRespuestas === false
+                                text: qsTr("Respuestas ocultas")
+                                tint: Theme.textSecondary; softTint: Theme.surfaceAlt
+                            }
+                            Badge {
                                 visible: tarjeta.modelData.activa === false
                                 text: qsTr("Oculta")
                                 tint: Theme.textSecondary; softTint: Theme.surfaceAlt
@@ -190,6 +208,11 @@ Page {
                             MenuItem { text: qsTr("Editar datos"); onTriggered: formulario.abrir(tarjeta.modelData) }
                             MenuItem { text: qsTr("Duplicar con preguntas"); onTriggered: root.clonar(tarjeta.modelData) }
                             MenuItem {
+                                text: tarjeta.modelData.mostrarRespuestas === false ? qsTr("Mostrar respuestas correctas al entregar")
+                                                                                     : qsTr("No mostrar respuestas correctas")
+                                onTriggered: root.cambiarRespuestas(tarjeta.modelData)
+                            }
+                            MenuItem {
                                 text: tarjeta.modelData.activa === false ? qsTr("Publicar a los estudiantes") : qsTr("Ocultar a los estudiantes")
                                 onTriggered: root.cambiarEstado(tarjeta.modelData)
                             }
@@ -223,6 +246,7 @@ Page {
             descField.text = a ? (a.descripcion || "") : ""
             fechaField.text = a ? a.fechaEntrega : manana()
             durField.text = a ? String(a.duracionMinutos) : "60"
+            mostrarCheck.checked = a ? a.mostrarRespuestas !== false : true
             open()
         }
 
@@ -240,7 +264,8 @@ Page {
                 titulo: tituloField.text.trim(), tipo: root.tipos[tipoCombo.currentIndex],
                 descripcion: descField.text.trim(), fechaEntrega: fecha, duracionMinutos: duracion,
                 materiaId: actividad ? actividad.materiaId : a.materiaId,
-                cursoId: actividad ? actividad.cursoId : a.cursoId
+                cursoId: actividad ? actividad.cursoId : a.cursoId,
+                mostrarRespuestas: mostrarCheck.checked
             }
             const editando = actividad !== null
             const listo = () => { toast.mostrar(editando ? qsTr("Actividad actualizada") : qsTr("Actividad creada"), "exito"); root.cargar() }
@@ -265,6 +290,11 @@ Page {
                 AppTextField { id: durField; label: qsTr("Duración (min)"); Layout.preferredWidth: 110; field.validator: IntValidator { bottom: 1; top: 600 } }
             }
             AppTextField { id: descField; label: qsTr("Descripción o instrucciones"); Layout.fillWidth: true }
+            CheckBox {
+                id: mostrarCheck
+                text: qsTr("Mostrar las respuestas correctas al estudiante después de entregar")
+                checked: true
+            }
             Label { visible: formulario.errorTexto !== ""; text: formulario.errorTexto; color: Theme.danger; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
