@@ -260,6 +260,7 @@ Page {
         function onErrorOccurred(error) { root.enviada = false }
         function onActivitySubmitted(success, message) {
             if (!success) root.enviada = false
+            resultDialog.exito = success
             resultDialog.messageText = (root.limite > 0 && root.restanteSeg === 0 ? qsTr("Se acabó el tiempo y la actividad se envió automáticamente.") + "\n\n" : "") + message;
             resultDialog.open();
         }
@@ -268,7 +269,8 @@ Page {
     Dialog {
         id: resultDialog
         property string messageText: ""
-        title: "Resultado"
+        property bool exito: true
+        title: exito ? "✔ " + qsTr("¡Hecho!") : qsTr("Resultado")
         anchors.centerIn: parent
         modal: true
         standardButtons: Dialog.Ok

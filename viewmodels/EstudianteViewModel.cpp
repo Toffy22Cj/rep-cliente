@@ -49,14 +49,16 @@ EstudianteViewModel::EstudianteViewModel(QObject *parent)
     connect(m_service, &EstudianteService::actividadResuelta, this, [this](const ResultadoActividadDTO &resultado) {
         m_entregada = true;
         AlmacenLocal::eliminarBorrador(m_currentActivityId);
+        m_actividadModel->marcarEntrega(m_currentActivityId, QStringLiteral("ENTREGADA"), resultado.nota);
         endRequest();
-        emit activitySubmitted(true, QString("Actividad enviada con éxito. Nota: %1").arg(resultado.nota));
+        emit activitySubmitted(true, tr("Actividad entregada. Su nota: %1").arg(QString::number(resultado.nota, 'f', 1)));
     });
 
     connect(m_service, &EstudianteService::actividadEncolada, this, [this](long long) {
         // La entrega ya está en la cola persistente; el borrador ya no hace falta
         m_entregada = true;
         AlmacenLocal::eliminarBorrador(m_currentActivityId);
+        m_actividadModel->marcarEntrega(m_currentActivityId, QStringLiteral("EN_COLA"), -1);
         endRequest();
         emit activitySubmitted(true, tr("Sin conexión: tu entrega quedó guardada en este equipo y se enviará "
                                         "automáticamente cuando vuelva la conexión. Si el plazo vence antes, "

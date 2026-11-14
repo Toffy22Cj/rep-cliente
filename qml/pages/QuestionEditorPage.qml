@@ -24,12 +24,30 @@ Page {
 
     background: Rectangle { color: Theme.background }
 
+    // Cada pregunta se guarda en el servidor al pulsar "Guardar pregunta"; el estado de la
+    // cabecera confirma que no queda nada pendiente y "Listo" vuelve a las actividades.
+    readonly property bool borradorPendiente: enunciadoField.text.trim() !== "" || archivoSeleccionado.toString() !== ""
+
     header: PageHeader {
         title: root.actividadTitulo !== "" ? root.actividadTitulo : qsTr("Preguntas de la actividad")
-        subtitle: qsTr("%n pregunta(s)", "", root.preguntas.length)
+        subtitle: qsTr("%n pregunta(s)", "", root.preguntas.length) + " · "
+                  + (root.guardando ? qsTr("Guardando…")
+                     : root.borradorPendiente ? qsTr("hay una pregunta sin guardar")
+                     : "✔ " + qsTr("todo guardado"))
+        AppButton {
+            text: "✔ " + qsTr("Listo")
+            enabled: !root.guardando
+            onClicked: root.terminar()
+        }
     }
 
     ApiRequests { id: requests }
+    Toast { id: toast }
+
+    function terminar() {
+        if (borradorPendiente) { salirSinGuardar.open(); return }
+        root.StackView.view.pop()
+    }
 
     readonly property var tipos: [
         { valor: "OPCION_MULTIPLE", texto: qsTr("Opción múltiple") },
@@ -94,18 +112,20 @@ Page {
         }, creada => {
             if (archivoSeleccionado.toString() !== "") {
                 requests.subir("/api/preguntas/" + creada.id + "/archivo", archivoSeleccionado, {},
-                               () => { guardando = false; limpiarFormulario(); cargar() },
+                               () => { guardando = false; limpiarFormulario(); cargar(); toast.mostrar(qsTr("Pregunta guardada con su adjunto"), "exito") },
                                mensaje => { guardando = false; error = qsTr("La pregunta se guardó, pero el adjunto falló: ") + mensaje; cargar() })
             } else {
                 guardando = false
                 limpiarFormulario()
                 cargar()
+                toast.mostrar(qsTr("Pregunta guardada"), "exito")
             }
         }, mensaje => { guardando = false; error = mensaje })
     }
 
     function eliminar(pregunta) {
-        requests.eliminar("/preguntas/" + pregunta.id, () => cargar(), mensaje => { error = mensaje })
+        requests.eliminar("/preguntas/" + pregunta.id, () => { cargar(); toast.mostrar(qsTr("Pregunta eliminada"), "exito") },
+                          mensaje => { error = mensaje })
     }
 
     Component.onCompleted: { limpiarFormulario(); cargar() }
@@ -368,5 +388,22 @@ Page {
             text: confirmar.pregunta ? qsTr("¿Eliminar «%1»? No se puede deshacer.").arg(confirmar.pregunta.enunciado) : ""
         }
         onAccepted: root.eliminar(pregunta)
+    }
+
+    Dialog {
+        id: salirSinGuardar
+        anchors.centerIn: parent
+        modal: true
+        width: Math.min(root.width - 40, 440)
+        title: qsTr("Pregunta sin guardar")
+        standardButtons: Dialog.Save | Dialog.Discard | Dialog.Cancel
+        Label {
+            width: parent.width
+            wrapMode: Text.WordWrap
+            color: Theme.textPrimary
+            text: qsTr("Escribió una pregunta que aún no se guardó. ¿Desea guardarla antes de salir?")
+        }
+        onAccepted: { root.guardar() }
+        onDiscarded: { close(); root.limpiarFormulario(); root.StackView.view.pop() }
     }
 }

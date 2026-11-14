@@ -21,7 +21,9 @@ public:
         MateriaNombreRole,
         CursoNombreRole,
         MateriaRole,
-        DuracionRole
+        DuracionRole,
+        EstadoEntregaRole,
+        NotaRole
     };
 
     explicit ActividadModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
@@ -40,6 +42,8 @@ public:
             case CursoNombreRole: return item.cursoNombre;
             case MateriaRole: return item.materiaNombre; // Alias for QML
             case DuracionRole: return item.duracionMinutos;
+            case EstadoEntregaRole: return item.estadoEntrega;
+            case NotaRole: return item.nota >= 0 ? QVariant(item.nota) : QVariant();
             default: return {};
         }
     }
@@ -53,7 +57,9 @@ public:
             {MateriaNombreRole, "materiaNombre"},
             {CursoNombreRole, "cursoNombre"},
             {MateriaRole, "materia"},
-            {DuracionRole, "duracion"}
+            {DuracionRole, "duracion"},
+            {EstadoEntregaRole, "estadoEntrega"},
+            {NotaRole, "nota"}
         };
     }
 
@@ -65,6 +71,16 @@ public:
         emit countChanged();
     }
     void setData(const QList<ActividadDTO> &data) { setActividades(data); }
+
+    /** Actualiza en la lista el estado tras entregar (sin esperar a recargar). */
+    void marcarEntrega(long long actividadId, const QString &estado, double nota) {
+        for (int i = 0; i < m_data.size(); ++i) {
+            if (m_data[i].id != actividadId) continue;
+            m_data[i].estadoEntrega = estado;
+            m_data[i].nota = nota;
+            emit dataChanged(index(i), index(i), {EstadoEntregaRole, NotaRole});
+        }
+    }
 
     Q_INVOKABLE QVariantMap get(int row) const {
         if (row < 0 || row >= m_data.size()) return {};

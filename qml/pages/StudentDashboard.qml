@@ -120,6 +120,8 @@ Page {
             delegate: Card {
                 id: actCard
                 required property var model
+                readonly property bool entregada: model.estadoEntrega === "ENTREGADA"
+                readonly property bool enCola: model.estadoEntrega === "EN_COLA"
                 width: ListView.view.width
                 hoverable: true
                 padding: Theme.spacingM
@@ -132,7 +134,7 @@ Page {
                         Layout.preferredWidth: 4
                         Layout.fillHeight: true
                         radius: 2
-                        color: Theme.primary
+                        color: actCard.entregada ? Theme.success : actCard.model.estadoEntrega === "VENCIDA" ? Theme.danger : Theme.primary
                     }
 
                     ColumnLayout {
@@ -163,8 +165,32 @@ Page {
                         }
                     }
 
+                    // Ya entregada: "Hecho" con la nota y acceso al resultado
+                    Badge {
+                        visible: actCard.entregada
+                        text: "✔ " + qsTr("Hecho") + (actCard.model.nota !== undefined && actCard.model.nota !== null
+                                                        ? " · " + Number(actCard.model.nota).toFixed(1) : "")
+                        tint: Theme.successDark; softTint: Theme.successSoft
+                    }
+                    Badge {
+                        visible: actCard.enCola
+                        text: qsTr("Enviada · se sincronizará")
+                        tint: Theme.warning; softTint: Theme.warningSoft
+                    }
+                    Badge {
+                        visible: actCard.model.estadoEntrega === "VENCIDA"
+                        text: qsTr("Vencida")
+                        tint: Theme.dangerDark; softTint: Theme.dangerSoft
+                    }
                     AppButton {
-                        text: qsTr("Resolver")
+                        visible: actCard.entregada
+                        text: qsTr("Ver resultado")
+                        variant: "secondary"
+                        onClicked: resultado.abrir(actCard.model.id, actCard.model.titulo)
+                    }
+                    AppButton {
+                        visible: !actCard.entregada && !actCard.enCola && actCard.model.estadoEntrega !== "VENCIDA"
+                        text: actCard.model.estadoEntrega === "EN_CURSO" ? qsTr("Continuar") : qsTr("Resolver")
                         onClicked: estudianteViewModel.startActividad(actCard.model.id)
                     }
                 }
@@ -176,6 +202,14 @@ Page {
         anchors.centerIn: parent
         running: estudianteViewModel.isLoading
         visible: running
+    }
+
+    ResultadoActividad { id: resultado }
+
+    // Al sincronizarse una entrega hecha sin conexión, se recarga para mostrar la nota
+    Connections {
+        target: sincronizacion
+        function onEnvioCompletado() { estudianteViewModel.loadActividades() }
     }
 
     Connections {
