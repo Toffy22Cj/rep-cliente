@@ -59,6 +59,8 @@ Page {
         title: estudianteViewModel.currentActivityTitle
         subtitle: estudianteViewModel.currentActivityDescription
         AppButton {
+            // En el teléfono la app ya ocupa toda la pantalla
+            visible: Qt.platform.os !== "android" && root.width >= 600
             text: root.pantallaCompleta ? qsTr("Salir de pantalla completa") : qsTr("⛶ Modo examen")
             variant: "secondary"
             onClicked: root.cambiarPantallaCompleta()
